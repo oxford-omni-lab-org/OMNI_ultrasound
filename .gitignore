@@ -1,0 +1,24 @@
+__pycache__/
+
+# pytesting
+.pytest_cache/
+.mypy_cache/
+.coverage
+
+# vscode
+.vscode
+
+BEAN
+BEAN
+
+
+docs/build/
+
+*.mha 
+*.png 
+*.nii 
+*.nii.gz 
+
+# model weights + config (might want to change this at some point to include them)
+*.pt
+*.json
