@@ -6,7 +6,7 @@ sys.path.append("/home/sedm6226/Documents/Projects/US_analysis_package")
 
 from src.utils import read_image  # noqa: E402
 from src.alignment.fBAN_v1 import AlignModel  # noqa: E402
-from src.alignment.align import (
+from src.alignment.align import (  # noqa: E402
     load_alignment_model,
     unalign_scan,
     prepare_scan,
@@ -32,7 +32,7 @@ def test_prepare_scan() -> None:
 
 
 def test_align_scan() -> None:
-    example_scan, _ = read_image(TEST_IMAGE_PATH)
+    example_scan, spacing = read_image(TEST_IMAGE_PATH)
     torch_scan = prepare_scan(example_scan)
     model = load_alignment_model()
 
@@ -49,6 +49,12 @@ def test_align_scan() -> None:
     assert params["rotation"].shape == (1, 4)
     assert params["translation"].shape == (1, 3)
 
+    write_image(
+        Path("src/alignment/test_data/aligned_scan.nii.gz"),
+        aligned_scan.squeeze().cpu().numpy(),
+        spacing=spacing,
+    )
+
 
 def test_align_from_params() -> None:
     example_scan, _ = read_image(TEST_IMAGE_PATH)
@@ -62,13 +68,15 @@ def test_align_from_params() -> None:
     )
     assert torch.all(aligned == aligned_from_params)
 
-    # set certain parametesr to default values
+    # set certain parameters to default values
     aligned_from_params = align_from_params(torch_scan, translation=params["translation"], scaling=params["scaling"])
     aligned_from_params = align_from_params(torch_scan, rotation=params["rotation"], scaling=params["scaling"])
     aligned_from_params = align_from_params(torch_scan, rotation=params["rotation"], translation=params["translation"])
 
 
 def test_unalign_scan() -> None:
+    """This test tests that a scan can be aligned and then unaligned to the original image,
+    resulting in the same image."""
     example_scan, spacing = read_image(TEST_IMAGE_PATH)
     torch_scan = prepare_scan(example_scan)
     model = load_alignment_model()
@@ -76,7 +84,8 @@ def test_unalign_scan() -> None:
     aligned_image, _, transform = align_scan(torch_scan, model, return_affine=True, scale=False)
     unaligned_im = unalign_scan(aligned_image, transform)
 
-    # write images to compare them manually, some interpolation artefacts are introduced so difficult to compare max pixel values
+    # write images to compare them manually, some interpolation artefacts are introduced
+    # so difficult to compare max pixel values
     write_image(
         Path("src/alignment/test_data/original.nii.gz"),
         torch_scan.squeeze().cpu().numpy(),
@@ -96,6 +105,8 @@ def test_unalign_scan() -> None:
 
 
 def test_scaling_twosteps() -> None:
+    """This function test whether applying first alignment without scaling, and then applying the scaling seperately
+    gives the same result as applying the alignment + scaling in one step."""
     example_scan, spacing = read_image(TEST_IMAGE_PATH)
     torch_scan = prepare_scan(example_scan)
     model = load_alignment_model()
@@ -128,7 +139,13 @@ def test_scaling_twosteps() -> None:
 
 
 def test_permutations() -> None:
-    example_scan, spacing = read_image(TEST_IMAGE_PATH)
+    """This functions tests whether permuting the axis results in the same alignment.
+    For a permutation of two axis, the third one flips so therefore the result also needs to be flipped.
+
+    A similar test can be made where apply the flipping to the input (after permution).
+    This should also result in the same/similar alignment.
+    """
+    example_scan, _ = read_image(TEST_IMAGE_PATH)
     torch_scan = prepare_scan(example_scan)
     model = load_alignment_model()
 

@@ -291,11 +291,13 @@ def apply_affine(
         transform_affine = transform_origin.inverse().matmul(transform_affine.matmul(transform_origin))
 
     # Generate transformed coordinates
-    transform_affine = transform_affine.inverse()[..., :-1, :]
+    transform_affine_n = transform_affine.inverse()[..., :-1, :]
+
+    # changed to xy should be ij
     coordinates = torch.meshgrid(*(torch.arange(s) for s in shape_output[2:]), indexing="ij")
     coordinates = torch.stack((*coordinates, torch.ones(*shape_output[2:]))).to(image.device)
 
-    coordinates = transform_affine.matmul(coordinates.reshape((1, 1, image.dim() - 1, -1)))
+    coordinates = transform_affine_n.matmul(coordinates.reshape((1, 1, image.dim() - 1, -1)))
 
     # Prepare indices for readability
     batch = torch.arange(shape_output[0])[:, None, None]

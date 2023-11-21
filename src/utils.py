@@ -6,6 +6,7 @@ import nibabel as nib
 from typeguard import typechecked
 
 
+@typechecked
 def _read_mha_image(
     vol_path: Path, return_info: bool = False
 ) -> Union[np.ndarray, tuple[np.ndarray, tuple[float, float, float]]]:
@@ -31,6 +32,7 @@ def _read_mha_image(
         return nii_array
 
 
+@typechecked
 def _read_nii_image(
     vol_path: Path, return_info: bool = False
 ) -> Union[np.ndarray, tuple[np.ndarray, tuple[float, float, float]]]:
@@ -47,6 +49,7 @@ def _read_nii_image(
     im_array = nib_img.get_fdata()
     if return_info:
         spacing = nib_img.header.get_zooms()
+        spacing = tuple([float(s) for s in spacing])
         return im_array, spacing
     else:
         return im_array

@@ -77,10 +77,7 @@ def align_scan(
 
 
 def align_scan(
-    image: torch.Tensor,
-    model: AlignModel,
-    return_affine: bool = False,
-    scale: bool = True
+    image: torch.Tensor, model: AlignModel, return_affine: bool = False, scale: bool = True
 ) -> Union[tuple[torch.Tensor, dict], tuple[torch.Tensor, dict, torch.Tensor]]:
     """align the scan using the fban model and return the aligned scan and the parameters
 
