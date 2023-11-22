@@ -13,6 +13,7 @@ from src.alignment.fBAN_v1 import AlignModel  # noqa: E402
 
 BAN_MODEL_PATH = Path("src/alignment/config/model_weights.pt")
 CONFIG_PATH = Path("src/alignment/config/model_configuration.json")
+BEAN_TO_ATLAS = Path("src/alignment/config/25wks_Atlas(separateHems)_mean_warped.json")
 
 
 def load_alignment_model(model_path: Optional[Path] = None) -> AlignModel:
@@ -169,3 +170,86 @@ def unalign_scan(aligned_image: torch.Tensor, transform_affine: torch.Tensor) ->
     inverse_transform = torch.inverse(transform_affine.squeeze()).unsqueeze(0)
     unaligned_image = apply_affine(aligned_image, inverse_transform)
     return unaligned_image
+
+
+def _get_atlastransform() -> torch.Tensor:
+    """This generates the affine transformation matrix to go from the bean space to the atlas space
+
+    :return: _description_
+    """
+
+    params_to_atlas = json.load(open(BEAN_TO_ATLAS, "r"))
+    eu_params = params_to_atlas["eu_param"]
+    tr_params = params_to_atlas["tr_param"]
+
+    eu_param_to_atlas = torch.Tensor(eu_params).reshape(1, -1)
+    tr_param_to_atlas = torch.Tensor(tr_params).reshape(1, -1)
+    sc_param_to_atlas = torch.Tensor([1, 1, 1]).reshape(1, -1)
+
+    # the negative, likely going from left to right handed coordinate system
+    atlas_transform = generate_affine(
+        tr_param_to_atlas, -eu_param_to_atlas, sc_param_to_atlas, type_rotation="euler_zyx", transform_order="trs"
+    )
+
+    # scale the scaling values to -80 - 80 (instead of -1 - 1 which was used in older versions)
+    atlas_transform[0, :3, 3] = atlas_transform[0, :3, 3] * 80
+
+    return atlas_transform
+
+
+def get_transform_to_atlasspace() -> torch.Tensor:
+    """This incorporates some permutations (implemented as rotation matrices) with the atlas transformation to go
+    directly from aligned images in bean orientation to atlas space
+
+    :return: transformation matrix
+    """
+
+    atlas_transform = _get_atlastransform()
+
+    # these are permutations so that the transformation matrices align with the images
+    first_perm = torch.tensor([[0, 1, 0, 0], [1, 0, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], dtype=torch.float32).unsqueeze(
+        0
+    )
+    # the second flips the hemisphere, this one is not strictly required, check for consistency in data
+    second_perm = torch.tensor(
+        [[0, 1, 0, 0], [0, 0, -1, 0], [1, 0, 0, 0], [0, 0, 0, 1]], dtype=torch.float32
+    ).unsqueeze(0)
+
+    # obtain the complete transformation
+    total_transform = second_perm @ atlas_transform @ first_perm
+
+    return total_transform
+
+
+def align_to_atlas(image: torch.Tensor, model: AlignModel, scale: bool = False) -> torch.Tensor:
+    model.to(image.device)
+    translation, rotation, scaling = model(image)
+
+    # generate affine transform without scaling
+    transform_affine = generate_affine(
+        parameter_translation=translation * 160,
+        parameter_rotation=rotation,
+        parameter_scaling=torch.tensor([[1.0, 1.0, 1.0]], device=image.device),
+        type_rotation="quaternions",
+        transform_order="srt",
+    )
+
+    # get bean to atlas transformation
+    to_atlas_affine = get_transform_to_atlasspace()
+
+    if scale:
+        # apply scaling after transformation to atlas space
+        scaling_affine = torch.eye(4, 4).to(image.device)
+        scaling_affine[0, 0] = scaling[0, 0]
+        scaling_affine[1, 1] = scaling[0, 1]
+        scaling_affine[2, 2] = scaling[0, 2]
+
+        total_transform = scaling_affine @ to_atlas_affine @ transform_affine
+
+    else:
+        total_transform = to_atlas_affine @ transform_affine
+
+    # apply whole transformation in one
+    aligned_to_atlas_scan = apply_affine(image, total_transform)
+
+    return aligned_to_atlas_scan

@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 sys.path.append(str(Path(__file__).parent.parent))
-from src.utils import _read_mha_image, _read_nii_image, read_image, write_image  # noqa: E402
+from src.utils import _read_mha_image, _read_nii_image, read_image, write_image, plot_midplanes  # noqa: E402
 
 
 TEST_IMAGE_PATH_MHA = Path("test_data/09-8515_187days_1049.mha")
@@ -87,3 +87,10 @@ def test_readwrite_consistency() -> None:
 
     # we are working with float numbers so small tolerance
     assert np.all(img - img_reload < 1e-7)
+
+
+def test_plot_midplanes() -> None:
+    """test plot midplanes function"""
+    img, _ = read_image(TEST_IMAGE_PATH_MHA)
+    fig = plot_midplanes(img, "test")
+    assert fig is not None

@@ -12,9 +12,12 @@ from src.alignment.align import (  # noqa: E402
     prepare_scan,
     align_scan,
     align_from_params,
+    get_transform_to_atlasspace,
+    align_to_atlas,
 )  # noqa: E402
-from src.utils import write_image  # noqa: E402
-from src.alignment.utils_alignment import plot_midplanes  # noqa: E402
+from src.utils import write_image, plot_midplanes  # noqa: E402
+from src.alignment.kelluwen_transforms import apply_affine  # noqa: E402
+
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 TEST_IMAGE_PATH = Path("src/alignment/test_data/06-5010_152days_0356.mha")
@@ -162,3 +165,69 @@ def test_permutations() -> None:
     fig_permuted = plot_midplanes(aligned_perm_np, title="aligned scan perm")
     fig_original.savefig("src/alignment/test_data/aligned_original.png")
     fig_permuted.savefig("src/alignment/test_data/aligned_permuted.png")
+
+
+def test_align_to_atlas() -> None:
+    example_scan, spacing = read_image(TEST_IMAGE_PATH)
+    torch_scan = prepare_scan(example_scan)
+    model = load_alignment_model()
+
+    # align scan (has to be scale = true to make transform to atlasspace work)
+    aligned_scan, params, affine = align_scan(torch_scan, model, return_affine=True, scale=True)
+
+    # get the transformation to atlas space
+    atlas_transform = get_transform_to_atlasspace()
+
+    # 1 and 2 step approach
+    aligned_atlas = apply_affine(aligned_scan, atlas_transform)
+    aligned_atlas_direct = apply_affine(torch_scan, atlas_transform @ affine)
+
+    fig_2step = plot_midplanes(aligned_atlas.squeeze().cpu().numpy(), title="aligned atlas")
+    fig_direct = plot_midplanes(aligned_atlas_direct.squeeze().cpu().numpy(), title="aligned atlas direct")
+
+    fig_2step.savefig("src/alignment/test_data/align_to_atlas_2step.png")
+    fig_direct.savefig("src/alignment/test_data/align_to_atlas_1step.png")
+
+
+def test_align_to_atlas_direct() -> None:
+    example_scan, spacing = read_image(TEST_IMAGE_PATH)
+    torch_scan = prepare_scan(example_scan)
+    model = load_alignment_model()
+
+    aligned_to_atlas_unscaled = align_to_atlas(torch_scan, model, scale=False)
+    aligned_to_atlas_scaled = align_to_atlas(torch_scan, model, scale=True)
+
+    plot_midplanes(aligned_to_atlas_unscaled.squeeze().cpu().numpy(), title="unscaled")
+    plot_midplanes(aligned_to_atlas_scaled.squeeze().cpu().numpy(), title="scaled")
+
+
+def test_get_atlastransform() -> None:
+    """test function to assert the generated atlas transformations is correct"""
+    atlas_transform = get_transform_to_atlasspace()
+
+    assert atlas_transform.shape == (1, 4, 4)
+
+    translation = atlas_transform[0, :3, 3]
+    assert torch.allclose(translation, torch.tensor([7.8464, -0.1925, 8.5786]), atol=1e-4)
+
+    rotation = atlas_transform[0, :3, :3]
+    assert torch.allclose(
+        rotation,
+        torch.tensor([[-0.0033, 0.9995, -0.0320], [0.9997, 0.0025, -0.0255], [0.0254, 0.0321, 0.9992]]),
+        atol=1e-4,
+    )
+
+
+def test_get_transform_to_atlasspace() -> None:
+    full_atlasspace_transform = get_transform_to_atlasspace()
+    assert full_atlasspace_transform.shape == (1, 4, 4)
+
+    translation = full_atlasspace_transform[0, :3, 3]
+    assert torch.allclose(translation, torch.tensor([7.8464, -0.1925, 8.5786]), atol=1e-4)
+
+    rotation = full_atlasspace_transform[0, :3, :3]
+    assert torch.allclose(
+        rotation,
+        torch.tensor([[-0.0033, 0.9995, -0.0320], [0.9997, 0.0025, -0.0255], [0.0254, 0.0321, 0.9992]]),
+        atol=1e-4,
+    )

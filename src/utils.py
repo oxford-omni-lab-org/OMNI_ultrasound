@@ -4,6 +4,7 @@ import SimpleITK as sitk
 from typing import Union
 import nibabel as nib
 from typeguard import typechecked
+import matplotlib.pyplot as plt
 
 
 @typechecked
@@ -129,3 +130,33 @@ def write_image(vol_path: Path, image_array: np.ndarray, spacing: tuple[float, f
 
     else:
         raise ValueError(f"Unknown file extension: {vol_path.suffix}")
+
+
+def plot_midplanes(image: np.ndarray, title: str) -> plt.Figure:
+    """plot the midplanes of a 3D image
+
+    :param image: 3D array of image data
+    :param title: title of the plot
+    :return: reference to the plot
+    """
+
+    assert len(image.shape) == 3, "image must be 3D"
+
+    midplanes = np.array(image.shape) // 2
+    fig, axes = plt.subplots(1, 3)
+    axes[0].imshow(image[midplanes[0], :, :], cmap="gray")
+    axes[0].set_axis_off()
+    axes[0].set_title("1 plane")
+
+    axes[1].imshow(image[:, midplanes[1], :], cmap="gray")
+    axes[1].set_axis_off()
+    axes[1].set_title("2 plane")
+
+    axes[2].imshow(image[:, :, midplanes[2]], cmap="gray")
+    axes[2].set_axis_off()
+    axes[2].set_title("3 plane")
+
+    fig.suptitle(title)
+    fig.tight_layout()
+
+    return fig

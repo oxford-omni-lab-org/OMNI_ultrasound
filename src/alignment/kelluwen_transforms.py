@@ -5,7 +5,7 @@ Copied over to minimize dependencies.
 
 """
 
-from typing import Union, overload
+from typing import Union, overload, Literal, Optional
 import torch
 
 
@@ -43,13 +43,9 @@ def deconstruct_affine(
 
     # Validate arguments
     if transform_affine.dim() not in (3, 4):
-        raise ValueError(
-            f"expected a 3D or 4D transform_affine, got {transform_affine.dim()!r}D instead"
-        )
+        raise ValueError(f"expected a 3D or 4D transform_affine, got {transform_affine.dim()!r}D instead")
     if transform_affine.shape[-2:] not in ((3, 3), (4, 4)):
-        raise ValueError(
-            f"unexpected shape of transform_affine {transform_affine.shape!r}"
-        )
+        raise ValueError(f"unexpected shape of transform_affine {transform_affine.shape!r}")
     if transform_order.lower() not in ("trs", "tsr", "rts", "rst", "str", "srt"):
         raise ValueError(f"unknown value {transform_order!r} for transform_order")
     if type_rotation.lower() not in (
@@ -97,26 +93,18 @@ def deconstruct_affine(
         transform_translation[..., :-1, -1] = transform_affine[..., :-1, -1]
     elif transform_order == "str":
         transform_translation = torch.eye(4).tile((*transform_affine.shape[:2], 1, 1))
-        transform_translation[..., :-1, -1] = transform_scaling.inverse().matmul(
-            transform_affine
-        )[..., :-1, -1]
+        transform_translation[..., :-1, -1] = transform_scaling.inverse().matmul(transform_affine)[..., :-1, -1]
     elif transform_order == "rts":
         transform_translation = (
-            transform_rotation.inverse()
-            .matmul(transform_affine)
-            .matmul(transform_scaling.inverse())
+            transform_rotation.inverse().matmul(transform_affine).matmul(transform_scaling.inverse())
         )
     elif transform_order == "rst":
         transform_translation = (
-            transform_scaling.inverse()
-            .matmul(transform_rotation.inverse())
-            .matmul(transform_affine)
+            transform_scaling.inverse().matmul(transform_rotation.inverse()).matmul(transform_affine)
         )
     elif transform_order == "srt":
         transform_translation = (
-            transform_rotation.inverse()
-            .matmul(transform_scaling.inverse())
-            .matmul(transform_affine)
+            transform_rotation.inverse().matmul(transform_scaling.inverse()).matmul(transform_affine)
         )
 
     # Extract translation parameters
@@ -148,9 +136,7 @@ def deconstruct_affine(
             K /= 3
             vals, vecs = torch.linalg.eigh(K)
             q = vecs[..., [3, 0, 1, 2], :]
-            parameter_rotation = torch.zeros(
-                [*transform_rotation.shape[:2], 4], device=transform_affine.device
-            )
+            parameter_rotation = torch.zeros([*transform_rotation.shape[:2], 4], device=transform_affine.device)
             idx = torch.argmax(vals, dim=-1)
             for i in range(q.shape[0]):
                 for j in range(q.shape[1]):
@@ -160,24 +146,12 @@ def deconstruct_affine(
         else:
             # Get indices for the necessary transform components
             euler_idx = dict(
-                euler_xyz=dict(
-                    s=-1, alpha=[[1, 2], [2, 2]], beta=[0, 2], gamma=[[0, 1], [0, 0]]
-                ),
-                euler_xzy=dict(
-                    s=1, alpha=[[2, 1], [1, 1]], beta=[0, 1], gamma=[[0, 2], [0, 0]]
-                ),
-                euler_yxz=dict(
-                    s=1, alpha=[[0, 2], [2, 2]], beta=[1, 2], gamma=[[1, 0], [1, 1]]
-                ),
-                euler_yzx=dict(
-                    s=-1, alpha=[[2, 0], [0, 0]], beta=[1, 0], gamma=[[1, 2], [1, 1]]
-                ),
-                euler_zxy=dict(
-                    s=-1, alpha=[[0, 1], [1, 1]], beta=[2, 1], gamma=[[2, 0], [2, 2]]
-                ),
-                euler_zyx=dict(
-                    s=1, alpha=[[1, 0], [0, 0]], beta=[2, 0], gamma=[[2, 1], [2, 2]]
-                ),
+                euler_xyz=dict(s=-1, alpha=[[1, 2], [2, 2]], beta=[0, 2], gamma=[[0, 1], [0, 0]]),
+                euler_xzy=dict(s=1, alpha=[[2, 1], [1, 1]], beta=[0, 1], gamma=[[0, 2], [0, 0]]),
+                euler_yxz=dict(s=1, alpha=[[0, 2], [2, 2]], beta=[1, 2], gamma=[[1, 0], [1, 1]]),
+                euler_yzx=dict(s=-1, alpha=[[2, 0], [0, 0]], beta=[1, 0], gamma=[[1, 2], [1, 1]]),
+                euler_zxy=dict(s=-1, alpha=[[0, 1], [1, 1]], beta=[2, 1], gamma=[[2, 0], [2, 2]]),
+                euler_zyx=dict(s=1, alpha=[[1, 0], [0, 0]], beta=[2, 0], gamma=[[2, 1], [2, 2]]),
             )
             idx_s = euler_idx[type_rotation]["s"]
             idx_alpha = euler_idx[type_rotation]["alpha"]
@@ -197,7 +171,7 @@ def deconstruct_affine(
             parameter_rotation = torch.stack([alpha, beta, gamma], dim=2)
 
     # Remove channels if required
-    if channel_dimension == False:
+    if channel_dimension is False:
         parameter_scaling = parameter_scaling[:, 0, :]
         parameter_translation = parameter_translation[:, 0, :]
         parameter_rotation = parameter_rotation[:, 0, :]
@@ -216,7 +190,7 @@ def deconstruct_affine(
 def apply_affine(
     image: torch.Tensor,
     transform_affine: torch.Tensor,
-    shape_output: Union[torch.Size, list[int]] = None,
+    shape_output: Optional[Union[torch.Size, list[int]]] = None,
     type_resampling: str = "bilinear",
     type_origin: str = "centre",
     type_output: str = "positional",
@@ -254,15 +228,15 @@ def apply_affine(
     if transform_affine.dim() not in (3, 4):
         raise ValueError(f"expected a 3D or 4D transform_affine, got {transform_affine.dim()!r}D instead")
     if transform_affine.shape[0] != image.shape[0]:
-        raise ValueError(f"transform_affine.shape doesn't match image.shape")
+        raise ValueError("transform_affine.shape doesn't match image.shape")
     if transform_affine.dim() - 2 == image.dim() - 3:
         if transform_affine.shape[0] != image.shape[0]:
-            raise ValueError(f"transform_affine.shape doesn't match image.shape")
+            raise ValueError("transform_affine.shape doesn't match image.shape")
     if transform_affine.shape[-2:] != (*[image.dim() - 1] * 2,):
-        raise ValueError(f"transform_affine.shape doesn't match image.shape")
-    if shape_output != None:
+        raise ValueError("transform_affine.shape doesn't match image.shape")
+    if shape_output is not None:
         if image.dim() != len(shape_output) or image.shape[:2] != shape_output[:2]:
-            raise ValueError(f"shape_output doesn't match image.shape")
+            raise ValueError("shape_output doesn't match image.shape")
     if type_resampling.lower() not in ("nearest", "bilinear"):
         raise ValueError(f"unknown value {type_resampling!r} for type_resampling")
     if type_origin.lower() not in ("centre", "origin"):
@@ -274,7 +248,7 @@ def apply_affine(
     type_resampling = type_resampling.lower()
     type_origin = type_origin.lower()
     type_output = type_output.lower()
-    if shape_output == None:
+    if shape_output is None:
         shape_output = image.shape
     if transform_affine.dim() == 3:
         transform_affine = transform_affine[:, None, :, :]
@@ -288,16 +262,16 @@ def apply_affine(
         transform_origin = torch.eye(image.dim() - 1).to(transform_affine.device)
         transform_origin = transform_origin.tile(*transform_affine.shape[:2], 1, 1)
         transform_origin[..., :-1, -1] = -(torch.tensor(image.shape[2 : image.dim()]) - 1) / 2
-        transform_affine = transform_origin.inverse().matmul(transform_affine.matmul(transform_origin))
+        transform_affine = transform_origin.inverse() @ transform_affine @ transform_origin
 
     # Generate transformed coordinates
     transform_affine_n = transform_affine.inverse()[..., :-1, :]
 
     # changed to xy should be ij
-    coordinates = torch.meshgrid(*(torch.arange(s) for s in shape_output[2:]), indexing="ij")
-    coordinates = torch.stack((*coordinates, torch.ones(*shape_output[2:]))).to(image.device)
+    coordinates_seq = torch.meshgrid(*(torch.arange(s) for s in shape_output[2:]), indexing="ij")
+    coordinates = torch.stack((*coordinates_seq, torch.ones(*shape_output[2:]))).to(image.device)
 
-    coordinates = transform_affine_n.matmul(coordinates.reshape((1, 1, image.dim() - 1, -1)))
+    coordinates = transform_affine_n @ (coordinates.reshape((1, 1, image.dim() - 1, -1)))
 
     # Prepare indices for readability
     batch = torch.arange(shape_output[0])[:, None, None]
@@ -363,13 +337,37 @@ def apply_affine(
         return {"image": image_transformed}
 
 
+@overload
 def generate_affine(
     parameter_translation: torch.Tensor,
     parameter_rotation: torch.Tensor,
     parameter_scaling: torch.Tensor,
+    type_output: Literal["positional"] = "positional",
     type_rotation: str = "euler_xyz",
     transform_order: str = "trs",
-    type_output: str = "positional",
+) -> torch.Tensor:
+    ...
+
+
+@overload
+def generate_affine(
+    parameter_translation: torch.Tensor,
+    parameter_rotation: torch.Tensor,
+    parameter_scaling: torch.Tensor,
+    type_output: Literal["named"],
+    type_rotation: str = "euler_xyz",
+    transform_order: str = "trs",
+) -> dict[str, torch.Tensor]:
+    ...
+
+
+def generate_affine(
+    parameter_translation: torch.Tensor,
+    parameter_rotation: torch.Tensor,
+    parameter_scaling: torch.Tensor,
+    type_output: Literal["positional", "named"] = "positional",
+    type_rotation: str = "euler_xyz",
+    transform_order: str = "trs",
 ) -> Union[torch.Tensor, dict[str, torch.Tensor]]:
     """Generates an affine transform from translation, rotation, and scaling parameters.
 
@@ -403,12 +401,12 @@ def generate_affine(
         parameter_translation.shape[:-1] != parameter_rotation.shape[:-1]
         or parameter_translation.shape[:-1] != parameter_scaling.shape[:-1]
     ):
-        raise ValueError(f"mismatched shape of parameters")
+        raise ValueError("mismatched shape of parameters")
     if (
         parameter_translation.device != parameter_rotation.device
         or parameter_translation.device != parameter_scaling.device
     ):
-        raise ValueError(f"mismatched devices of parameters")
+        raise ValueError("mismatched devices of parameters")
     if transform_order.lower() not in ("trs", "tsr", "rts", "rst", "str", "srt"):
         raise ValueError(f"unknown value {transform_order!r} for transform_order")
     if type_output.lower() not in ("positional", "named"):
@@ -426,10 +424,10 @@ def generate_affine(
     # Sort order of operations
     key = (transform_order.index(x) for x in ("t", "r", "s"))
     operations = (transform_translation, transform_rotation, transform_scaling)
-    operations = [x for _, x in sorted(zip(key, operations))]
+    operations_sorted = [x for _, x in sorted(zip(key, operations))]
 
     # Generate affine transform
-    transform_affine = operations[0].matmul(operations[1]).matmul(operations[2])
+    transform_affine = operations_sorted[0] @ operations_sorted[1] @ operations_sorted[2]
 
     # Return results
     if type_output == "positional":
@@ -459,7 +457,7 @@ def generate_translation(
             f"expected a 1D, 2D, or 3D parameter_translation, got {parameter_translation.dim()!r}D instead"
         )
     if parameter_translation.shape[-1] not in (2, 3):
-        raise ValueError(f"unexpected shape of parameter_translation")
+        raise ValueError("unexpected shape of parameter_translation")
     if type_output.lower() not in ("positional", "named"):
         raise ValueError(f"unknown value {type_output!r} for type_output")
 
@@ -504,7 +502,7 @@ def generate_scaling(
     if parameter_scaling.dim() not in (1, 2, 3):
         raise ValueError(f"expected a 1D, 2D, or 3D parameter_scaling, got {parameter_scaling.dim()!r}D instead")
     if parameter_scaling.shape[-1] not in (2, 3):
-        raise ValueError(f"unexpected shape of parameter_scaling")
+        raise ValueError("unexpected shape of parameter_scaling")
     if type_output.lower() not in ("positional", "named"):
         raise ValueError(f"unknown value {type_output!r} for type_output")
 
@@ -554,7 +552,7 @@ def generate_rotation(
     if parameter_rotation.dim() not in (1, 2, 3):
         raise ValueError(f"expected a 1D, 2D, or 3D parameter_rotation, got {parameter_rotation.dim()!r}D instead")
     if parameter_rotation.shape[-1] not in (1, 3, 4):
-        raise ValueError(f"unexpected shape of parameter_scaling")
+        raise ValueError("unexpected shape of parameter_scaling")
     if type_rotation.lower() not in (
         "euler_xyz",
         "euler_xzy",
@@ -567,9 +565,9 @@ def generate_rotation(
         raise ValueError(f"unknown value {type_rotation!r} for type_rotation")
     if parameter_rotation.shape[-1] != 1:
         if type_rotation.lower()[:5] == "euler" and parameter_rotation.shape[-1] != 3:
-            raise ValueError(f"mismatch between type_rotation and shape of parameter_rotation")
+            raise ValueError("mismatch between type_rotation and shape of parameter_rotation")
         if type_rotation.lower() == "quaternions" and parameter_rotation.shape[-1] != 4:
-            raise ValueError(f"mismatch between type_rotation and shape of parameter_rotation")
+            raise ValueError("mismatch between type_rotation and shape of parameter_rotation")
     if type_output.lower() not in ("positional", "named"):
         raise ValueError(f"unknown value {type_output!r} for type_output")
 
