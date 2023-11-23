@@ -3,7 +3,6 @@ import torch
 import numpy as np
 from pathlib import Path
 import sys
-from typing import Optional
 
 sys.path.append("/home/sedm6226/Documents/Projects/US_analysis_package")
 

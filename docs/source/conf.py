@@ -5,7 +5,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../src'))
+sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -19,8 +19,9 @@ release = '0.1'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = ['sphinx.ext.autodoc',     'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon']
+    'sphinx.ext.napoleon', 'sphinx.ext.autosummary']
 
+autosummary_generate = True
 templates_path = ['_templates']
 exclude_patterns = []
 
@@ -29,5 +30,5 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'furo' #'sphinx_rtd_theme'
 html_static_path = ['_static']

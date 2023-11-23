@@ -8,11 +8,11 @@ from src.utils import read_image  # noqa: E402
 from src.alignment.fBAN_v1 import AlignModel  # noqa: E402
 from src.alignment.align import (  # noqa: E402
     load_alignment_model,
-    unalign_scan,
     prepare_scan,
-    align_scan,
-    align_from_params,
-    get_transform_to_atlasspace,
+    align_to_bean,
+    transform_from_params,
+    transform_from_affine,
+    _get_transform_to_atlasspace,
     align_to_atlas,
 )  # noqa: E402
 from src.utils import write_image, plot_midplanes  # noqa: E402
@@ -39,7 +39,7 @@ def test_align_scan() -> None:
     torch_scan = prepare_scan(example_scan)
     model = load_alignment_model()
 
-    aligned_scan, params = align_scan(torch_scan, model)
+    aligned_scan, params = align_to_bean(torch_scan, model)
 
     # verify the scan is of the same shape as before
     assert aligned_scan.shape == torch_scan.shape
@@ -65,16 +65,20 @@ def test_align_from_params() -> None:
     model = load_alignment_model()
 
     # Compare the two alignment functions
-    aligned, params = align_scan(torch_scan, model)
-    aligned_from_params = align_from_params(
+    aligned, params = align_to_bean(torch_scan, model)
+    aligned_from_params = transform_from_params(
         torch_scan, rotation=params["rotation"], translation=params["translation"], scaling=params["scaling"]
     )
     assert torch.all(aligned == aligned_from_params)
 
     # set certain parameters to default values
-    aligned_from_params = align_from_params(torch_scan, translation=params["translation"], scaling=params["scaling"])
-    aligned_from_params = align_from_params(torch_scan, rotation=params["rotation"], scaling=params["scaling"])
-    aligned_from_params = align_from_params(torch_scan, rotation=params["rotation"], translation=params["translation"])
+    aligned_from_params = transform_from_params(
+        torch_scan, translation=params["translation"], scaling=params["scaling"]
+    )
+    aligned_from_params = transform_from_params(torch_scan, rotation=params["rotation"], scaling=params["scaling"])
+    aligned_from_params = transform_from_params(
+        torch_scan, rotation=params["rotation"], translation=params["translation"]
+    )
 
 
 def test_unalign_scan() -> None:
@@ -84,8 +88,8 @@ def test_unalign_scan() -> None:
     torch_scan = prepare_scan(example_scan)
     model = load_alignment_model()
 
-    aligned_image, _, transform = align_scan(torch_scan, model, return_affine=True, scale=False)
-    unaligned_im = unalign_scan(aligned_image, transform)
+    aligned_image, _, transform = align_to_bean(torch_scan, model, return_affine=True, scale=False)
+    unaligned_im = transform_from_affine(aligned_image, transform.inverse())
 
     # write images to compare them manually, some interpolation artefacts are introduced
     # so difficult to compare max pixel values
@@ -115,11 +119,11 @@ def test_scaling_twosteps() -> None:
     model = load_alignment_model()
 
     # 1 step approach
-    aligned_scan, params = align_scan(torch_scan, model)
+    aligned_scan, params = align_to_bean(torch_scan, model)
 
     # 2 step approach
-    aligned_noscale, _ = align_scan(torch_scan, model, scale=False)
-    aligned_twostep = align_from_params(aligned_noscale, scaling=params["scaling"])
+    aligned_noscale, _ = align_to_bean(torch_scan, model, scale=False)
+    aligned_twostep = transform_from_params(aligned_noscale, scaling=params["scaling"])
 
     # write images to compare them manually
     write_image(
@@ -153,8 +157,8 @@ def test_permutations() -> None:
     model = load_alignment_model()
 
     # align scan, and permuted scan
-    aligned_scan, _ = align_scan(torch_scan, model)
-    aligned_scan_perm, _ = align_scan(torch_scan.permute(0, 1, 4, 3, 2), model)
+    aligned_scan, _ = align_to_bean(torch_scan, model)
+    aligned_scan_perm, _ = align_to_bean(torch_scan.permute(0, 1, 4, 3, 2), model)
 
     # odd no. axis permutation flips axis, so we have to correct for that in the results
     aligned_np = aligned_scan.squeeze().cpu().numpy()
@@ -173,14 +177,17 @@ def test_align_to_atlas() -> None:
     model = load_alignment_model()
 
     # align scan (has to be scale = true to make transform to atlasspace work)
-    aligned_scan, params, affine = align_scan(torch_scan, model, return_affine=True, scale=True)
+    aligned_scan, params, affine = align_to_bean(torch_scan, model, return_affine=True, scale=True)
 
     # get the transformation to atlas space
-    atlas_transform = get_transform_to_atlasspace()
+    atlas_transform = _get_transform_to_atlasspace()
 
     # 1 and 2 step approach
     aligned_atlas = apply_affine(aligned_scan, atlas_transform)
     aligned_atlas_direct = apply_affine(torch_scan, atlas_transform @ affine)
+
+    assert isinstance(aligned_atlas, torch.Tensor)
+    assert isinstance(aligned_atlas_direct, torch.Tensor)
 
     fig_2step = plot_midplanes(aligned_atlas.squeeze().cpu().numpy(), title="aligned atlas")
     fig_direct = plot_midplanes(aligned_atlas_direct.squeeze().cpu().numpy(), title="aligned atlas direct")
@@ -194,16 +201,19 @@ def test_align_to_atlas_direct() -> None:
     torch_scan = prepare_scan(example_scan)
     model = load_alignment_model()
 
-    aligned_to_atlas_unscaled = align_to_atlas(torch_scan, model, scale=False)
-    aligned_to_atlas_scaled = align_to_atlas(torch_scan, model, scale=True)
+    aligned_to_atlas_unscaled, transform_dict = align_to_atlas(torch_scan, model, scale=False, return_affine=False)
+    aligned_to_atlas_scaled, transform_dict = align_to_atlas(torch_scan, model, scale=True, return_affine=False)
 
     plot_midplanes(aligned_to_atlas_unscaled.squeeze().cpu().numpy(), title="unscaled")
     plot_midplanes(aligned_to_atlas_scaled.squeeze().cpu().numpy(), title="scaled")
 
+    aligned_to_atlas_scaled_2step = transform_from_params(aligned_to_atlas_unscaled, scaling=transform_dict['scaling'])
+    plot_midplanes(aligned_to_atlas_scaled_2step.squeeze().cpu().numpy(), title="unscaled")
+
 
 def test_get_atlastransform() -> None:
     """test function to assert the generated atlas transformations is correct"""
-    atlas_transform = get_transform_to_atlasspace()
+    atlas_transform = _get_transform_to_atlasspace()
 
     assert atlas_transform.shape == (1, 4, 4)
 
@@ -219,7 +229,7 @@ def test_get_atlastransform() -> None:
 
 
 def test_get_transform_to_atlasspace() -> None:
-    full_atlasspace_transform = get_transform_to_atlasspace()
+    full_atlasspace_transform = _get_transform_to_atlasspace()
     assert full_atlasspace_transform.shape == (1, 4, 4)
 
     translation = full_atlasspace_transform[0, :3, 3]

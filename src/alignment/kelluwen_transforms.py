@@ -1,19 +1,31 @@
-""" 
+"""
+This module contains helper functions to apply alignment parameters resulting from fBAN_v1 to an image. It is likely not
+necessary to access these functions directly when doing standard image alignment operations, as most are shadowed by functions
+in the main align.py module.
 
-These functions have been taken from kelluwen on GitHub: https://github.com/FelipeMoser/kelluwen/blob/main/kelluwen/functions/transforms.py
-Copied over to minimize dependencies.
+These functions have been taken from 
+[Kelluwen Github](https://github.com/FelipeMoser/kelluwen/blob/main/kelluwen/functions/transforms.py).
+
+The functions were copied over to minimise dependendencies, and their style adjusted to match the rest of the codebase,
 
 """
 
-from typing import Union, overload, Literal, Optional
+from typing import Union, overload, Literal, Optional, TypedDict
 import torch
+from typeguard import typechecked
 
 
+ORDER_TYPES = Literal["trs", "tsr", "rts", "rst", "str", "srt"]
+ROT_TYPES = Literal["euler_xyz", "euler_xzy", "euler_yxz", "euler_yzx", "euler_zxy", "euler_zyx", "quaternions"]
+RETURN_TYPES = Literal["positional", "named"]
+
+
+@typechecked
 def deconstruct_affine(
     transform_affine: torch.Tensor,
-    transform_order: str = "srt",
-    type_rotation: str = "euler_xyz",
-    type_output: str = "positional",
+    transform_order: ORDER_TYPES = "srt",
+    type_rotation: ROT_TYPES = "euler_xyz",
+    type_output: RETURN_TYPES = "positional",
 ) -> Union[tuple, dict[str, torch.Tensor]]:
     """Deconstructs the affine transform into its conforming translation, rotation, and scaling parameters.
 
@@ -26,10 +38,12 @@ def deconstruct_affine(
         Order of multiplication of translation, rotation, and scaling transforms
 
     type_rotation: str, optional (default="euler_xyz)
-        Type of rotation parameters: quaternions or Euler angles. For Euler angles, the order of the multiplication of the rotations around x, y, and z is represented in the name (euler_xyz, euler_yzx, etc.)
+        Type of rotation parameters: quaternions or Euler angles. For Euler angles, the order of the
+        multiplication of the rotations around x, y, and z is represented in the name (euler_xyz, euler_yzx, etc.)
 
     type_output : str, optional (default="positional")
-        Determines how the outputs are returned. If set to "positional", it returns positional outputs. If set to "named", it returns a dictionary with named outputs.
+        Determines how the outputs are returned. If set to "positional", it returns positional outputs.
+        If set to "named", it returns a dictionary with named outputs.
 
     Returns
     -------
@@ -46,25 +60,8 @@ def deconstruct_affine(
         raise ValueError(f"expected a 3D or 4D transform_affine, got {transform_affine.dim()!r}D instead")
     if transform_affine.shape[-2:] not in ((3, 3), (4, 4)):
         raise ValueError(f"unexpected shape of transform_affine {transform_affine.shape!r}")
-    if transform_order.lower() not in ("trs", "tsr", "rts", "rst", "str", "srt"):
-        raise ValueError(f"unknown value {transform_order!r} for transform_order")
-    if type_rotation.lower() not in (
-        "euler_xyz",
-        "euler_xzy",
-        "euler_yxz",
-        "euler_yzx",
-        "euler_zxy",
-        "euler_zyx",
-        "quaternions",
-    ):
-        raise ValueError(f"unknown value {type_rotation!r} for type_rotation")
-    if type_output.lower() not in ("positional", "named"):
-        raise ValueError(f"unknown value {type_output!r} for type_output")
 
     # Update variables if required
-    transform_order = transform_order.lower()
-    type_rotation = type_rotation.lower()
-    type_output = type_output.lower()
     if transform_affine.dim() == 4:
         channel_dimension = True
     elif transform_affine.dim() == 3:
@@ -78,13 +75,14 @@ def deconstruct_affine(
         parameter_scaling = transform_affine[..., :-1, :-1].norm(dim=2)
 
     # Extract scaling transform
-    transform_scaling = generate_scaling(parameter_scaling)
+    transform_scaling = generate_scaling(parameter_scaling, type_output="positional")
+    assert isinstance(transform_scaling, torch.Tensor)
 
     # Extract rotation transform
     if transform_order in ("srt, str, tsr"):
-        transform_rotation = transform_scaling.inverse().matmul(transform_affine)
+        transform_rotation = transform_scaling.inverse() @ transform_affine
     else:
-        transform_rotation = transform_affine.matmul(transform_scaling.inverse())
+        transform_rotation = transform_affine @ transform_scaling.inverse()
     transform_rotation[..., :-1, -1] = 0
 
     # Extract translation transform
@@ -93,19 +91,13 @@ def deconstruct_affine(
         transform_translation[..., :-1, -1] = transform_affine[..., :-1, -1]
     elif transform_order == "str":
         transform_translation = torch.eye(4).tile((*transform_affine.shape[:2], 1, 1))
-        transform_translation[..., :-1, -1] = transform_scaling.inverse().matmul(transform_affine)[..., :-1, -1]
+        transform_translation[..., :-1, -1] = (transform_scaling.inverse() @ transform_affine)[..., :-1, -1]
     elif transform_order == "rts":
-        transform_translation = (
-            transform_rotation.inverse().matmul(transform_affine).matmul(transform_scaling.inverse())
-        )
+        transform_translation = transform_rotation.inverse() @ transform_affine @ transform_scaling.inverse()
     elif transform_order == "rst":
-        transform_translation = (
-            transform_scaling.inverse().matmul(transform_rotation.inverse()).matmul(transform_affine)
-        )
+        transform_translation = transform_scaling.inverse() @ transform_rotation.inverse() @ transform_affine
     elif transform_order == "srt":
-        transform_translation = (
-            transform_rotation.inverse().matmul(transform_scaling.inverse()).matmul(transform_affine)
-        )
+        transform_translation = transform_rotation.inverse() @ transform_scaling.inverse() @ transform_affine
 
     # Extract translation parameters
     parameter_translation = transform_translation[..., :-1, -1]
@@ -116,7 +108,8 @@ def deconstruct_affine(
     else:  # 3D rotation
         if type_rotation == "quaternions":
             # Extract quaternions from rotation transform
-            # This section has been adapted to pytorch from nibabel's implementation: htorchps://nipy.org/nibabel/reference/nibabel.quaternions.html
+            # This section has been adapted to pytorch from nibabel's implementation:
+            # htorchps://nipy.org/nibabel/reference/nibabel.quaternions.html
             transform_rotation = transform_rotation[..., :-1, :-1].flatten(start_dim=-2)
             Qxx, Qyx, Qzx, Qxy, Qyy, Qzy, Qxz, Qyz, Qzz = [
                 transform_rotation[..., i] for i in range(transform_rotation.shape[-1])
@@ -145,7 +138,10 @@ def deconstruct_affine(
                         parameter_rotation[i, j] *= -1
         else:
             # Get indices for the necessary transform components
-            euler_idx = dict(
+            EulerDict = TypedDict(
+                "EulerDict", {"s": int, "alpha": list[list[int]], "beta": list[int], "gamma": list[list[int]]}
+            )
+            euler_idx: dict[str, EulerDict] = dict(
                 euler_xyz=dict(s=-1, alpha=[[1, 2], [2, 2]], beta=[0, 2], gamma=[[0, 1], [0, 0]]),
                 euler_xzy=dict(s=1, alpha=[[2, 1], [1, 1]], beta=[0, 1], gamma=[[0, 2], [0, 0]]),
                 euler_yxz=dict(s=1, alpha=[[0, 2], [2, 2]], beta=[1, 2], gamma=[[1, 0], [1, 1]]),
@@ -206,7 +202,8 @@ def apply_affine(
         Affine transform being applied. Must be of shape (batch, channel, *), (batch, 1, *), or (batch, *).
 
     shape_output : torch.Size, optional (default=None)
-        Output shape of transformed image. Must have the same batch and channel as image. If None, the output_shape=image.shape
+        Output shape of transformed image. Must have the same batch and channel as image.
+        If None, the output_shape=image.shape
 
     type_resampling: str, optional (default=bilinear)
         Interpolation algorithm used when sampling image. Available: bilinear, nearest
@@ -215,7 +212,8 @@ def apply_affine(
         Point around which the transform is applied. Available: centre, origin
 
     type_output : str, optional (default="positional")
-        Determines how the outputs are returned. If set to "positional", it returns positional outputs. If set to "named", it returns a dictionary with named outputs.
+        Determines how the outputs are returned. If set to "positional", it returns positional outputs.
+        If set to "named", it returns a dictionary with named outputs.
 
     Returns
     -------
@@ -292,17 +290,17 @@ def apply_affine(
     # Resample
     if type_resampling == "nearest":
         # Prepare indices and weights for readability
-        c0 = lambda x: (x.ceil() - 1).long()
-        c1 = lambda x: x.ceil().long()
-        w0 = lambda x: x.ceil() - x.round()
-        w1 = lambda x: x.round() - (x.ceil() - 1)
+        c0 = lambda x: (x.ceil() - 1).long()  # noqa: E731
+        c1 = lambda x: x.ceil().long()  # noqa: E731
+        w0 = lambda x: x.ceil() - x.round()  # noqa: E731
+        w1 = lambda x: x.round() - (x.ceil() - 1)  # noqa: E731
 
     elif type_resampling == "bilinear":
         # Prepare indices and weights for readability
-        c0 = lambda x: (x.ceil() - 1).long()
-        c1 = lambda x: x.ceil().long()
-        w0 = lambda x: x.ceil() - x
-        w1 = lambda x: x - (x.ceil() - 1)
+        c0 = lambda x: (x.ceil() - 1).long()  # noqa: E731
+        c1 = lambda x: x.ceil().long()  # noqa: E731
+        w0 = lambda x: x.ceil() - x  # noqa: E731
+        w1 = lambda x: x - (x.ceil() - 1)  # noqa: E731
 
     # Sample transformed image
     if image.dim() == 4:
@@ -343,8 +341,8 @@ def generate_affine(
     parameter_rotation: torch.Tensor,
     parameter_scaling: torch.Tensor,
     type_output: Literal["positional"] = "positional",
-    type_rotation: str = "euler_xyz",
-    transform_order: str = "trs",
+    type_rotation: ROT_TYPES = "euler_xyz",
+    transform_order: ORDER_TYPES = "trs",
 ) -> torch.Tensor:
     ...
 
@@ -355,41 +353,48 @@ def generate_affine(
     parameter_rotation: torch.Tensor,
     parameter_scaling: torch.Tensor,
     type_output: Literal["named"],
-    type_rotation: str = "euler_xyz",
-    transform_order: str = "trs",
+    type_rotation: ROT_TYPES = "euler_xyz",
+    transform_order: ORDER_TYPES = "trs",
 ) -> dict[str, torch.Tensor]:
     ...
 
 
+@typechecked
 def generate_affine(
     parameter_translation: torch.Tensor,
     parameter_rotation: torch.Tensor,
     parameter_scaling: torch.Tensor,
-    type_output: Literal["positional", "named"] = "positional",
-    type_rotation: str = "euler_xyz",
-    transform_order: str = "trs",
+    type_output: RETURN_TYPES = "positional",
+    type_rotation: ROT_TYPES = "euler_xyz",
+    transform_order: ORDER_TYPES = "trs",
 ) -> Union[torch.Tensor, dict[str, torch.Tensor]]:
     """Generates an affine transform from translation, rotation, and scaling parameters.
 
     Parameters
     ----------
     parameter_translation : torch.Tensor
-        Translation parameters. Must be of shape (batch, channel, parameters) or (batch, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
+        Translation parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
+        with parameters=2 or 3 for 2D and 3D images, respectively.
 
     parameter_rotation : torch.Tensor
-        Rotation parameters. Must be of shape (batch, channel, parameters) or (batch, parameters), with parameters=1, 3 or 4, for 2D, 3D Euler angles, and 3D quaternions, respectively.
+        Rotation parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
+        with parameters=1, 3 or 4, for 2D, 3D Euler angles, and 3D quaternions, respectively.
 
     parameter_scaling : torch.Tensor
-        Scaling parameters. Must be of shape (batch, channel, parameters) or (batch, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
+        Scaling parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
+        with parameters=2 or 3 for 2D and 3D images, respectively.
 
     type_rotation: str, optional (default="euler_xyz")
-        Type of rotation parameters: quaternions or Euler angles. For Euler angles, the order of the multiplication of the rotations around x, y, and z is represented in the name (euler_xyz, euler_yzx, etc.)
+        Type of rotation parameters: quaternions or Euler angles. For Euler angles,
+        the order of the multiplication of the rotations around x, y, and z is represented in the name
+        (euler_xyz, euler_yzx, etc.)
 
     transform_order : str, optional (default="trs")
         Order of multiplication of translation, rotation, and scaling transforms
 
     type_output : str, optional (default="positional")
-        Determines how the outputs are returned. If set to "positional", it returns positional outputs. If set to "named", it returns a dictionary with named outputs.
+        Determines how the outputs are returned. If set to "positional", it returns positional outputs.
+        If set to "named", it returns a dictionary with named outputs.
 
     Returns
     -------
@@ -407,19 +412,15 @@ def generate_affine(
         or parameter_translation.device != parameter_scaling.device
     ):
         raise ValueError("mismatched devices of parameters")
-    if transform_order.lower() not in ("trs", "tsr", "rts", "rst", "str", "srt"):
-        raise ValueError(f"unknown value {transform_order!r} for transform_order")
-    if type_output.lower() not in ("positional", "named"):
-        raise ValueError(f"unknown value {type_output!r} for type_output")
-
-    # Update variables if required
-    transform_order = transform_order.lower()
-    type_output = type_output.lower()
 
     # Generate required transforms
     transform_translation = generate_translation(parameter_translation)
     transform_rotation = generate_rotation(parameter_rotation, type_rotation)
     transform_scaling = generate_scaling(parameter_scaling)
+
+    assert isinstance(transform_translation, torch.Tensor)
+    assert isinstance(transform_rotation, torch.Tensor)
+    assert isinstance(transform_scaling, torch.Tensor)
 
     # Sort order of operations
     key = (transform_order.index(x) for x in ("t", "r", "s"))
@@ -438,12 +439,14 @@ def generate_affine(
 
 def generate_translation(
     parameter_translation: torch.Tensor,
-    type_output: str = "positional",
+    type_output: RETURN_TYPES = "positional",
 ) -> Union[torch.Tensor, dict[str, torch.Tensor]]:
     """Generates a translation transform from translation parameters.
 
-    :param parameter_translation: Translation parameters. Must be of shape (batch, channel, parameters) or (batch, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
-    :param type_output: Determines how the outputs are returned. If set to "positional", it returns positional outputs. If set to "named", it returns a dictionary with named outputs.
+    :param parameter_translation: Translation parameters. Must be of shape (batch, channel, parameters)
+    or (batch, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
+    :param type_output: Determines how the outputs are returned. If set to "positional",
+    it returns positional outputs. If set to "named", it returns a dictionary with named outputs.
     , defaults to "positional"
     :raises ValueError: An error occured because dimension of batched translation parameters is >3
     :raises ValueError: An error occured because length of translation parameters is not 2 or 3
@@ -458,11 +461,8 @@ def generate_translation(
         )
     if parameter_translation.shape[-1] not in (2, 3):
         raise ValueError("unexpected shape of parameter_translation")
-    if type_output.lower() not in ("positional", "named"):
-        raise ValueError(f"unknown value {type_output!r} for type_output")
 
     # Update variables if required
-    type_output = type_output.lower()
     device = parameter_translation.device
 
     # Generate scaling transform
@@ -482,17 +482,19 @@ def generate_translation(
 
 def generate_scaling(
     parameter_scaling: torch.Tensor,
-    type_output: str = "positional",
+    type_output: RETURN_TYPES = "positional",
 ) -> Union[torch.Tensor, dict[str, torch.Tensor]]:
     """Generates a scaling transform from scaling parameters.
 
     Parameters
     ----------
     parameter_scaling : torch.Tensor
-        Scaling parameters. Must be of shape (batch, channel, parameters) or (batch, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
+        Scaling parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
+        with parameters=2 or 3 for 2D and 3D images, respectively.
 
     type_output : str, optional (default="positional")
-        Determines how the outputs are returned. If set to "positional", it returns positional outputs. If set to "named", it returns a dictionary with named outputs.
+        Determines how the outputs are returned. If set to "positional", it returns positional outputs.
+        If set to "named", it returns a dictionary with named outputs.
 
     Returns
     -------
@@ -503,11 +505,7 @@ def generate_scaling(
         raise ValueError(f"expected a 1D, 2D, or 3D parameter_scaling, got {parameter_scaling.dim()!r}D instead")
     if parameter_scaling.shape[-1] not in (2, 3):
         raise ValueError("unexpected shape of parameter_scaling")
-    if type_output.lower() not in ("positional", "named"):
-        raise ValueError(f"unknown value {type_output!r} for type_output")
 
-    # Update variables if required
-    type_output = type_output.lower()
     device = parameter_scaling.device
 
     # Generate scaling transform
@@ -528,21 +526,25 @@ def generate_scaling(
 
 def generate_rotation(
     parameter_rotation: torch.Tensor,
-    type_rotation: str = "euler_xyz",
-    type_output: str = "positional",
+    type_rotation: ROT_TYPES = "euler_xyz",
+    type_output: RETURN_TYPES = "positional",
 ) -> Union[torch.Tensor, dict[str, torch.Tensor]]:
     """Generates a rotation transform from rotation parameters.
 
     Parameters
     ----------
     parameter_rotation : torch.Tensor
-        Rotation parameters. Must be of shape (batch, channel, parameters) or (batch, parameters), with parameters=1, 3 or 4, for 2D, 3D Euler angles, and 3D quaternions, respectively.
+        Rotation parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
+        with parameters=1, 3 or 4, for 2D, 3D Euler angles, and 3D quaternions, respectively.
 
     type_rotation: str, optional (default="euler_xyz)
-        Type of rotation parameters: quaternions or Euler angles. For Euler angles, the order of the multiplication of the rotations around x, y, and z is represented in the name (euler_xyz, euler_yzx, etc.) This variable with be ignored for 2D rotations.
+        Type of rotation parameters: quaternions or Euler angles. For Euler angles, the order of the
+        multiplication of the rotations around x, y, and z is represented in the
+        name (euler_xyz, euler_yzx, etc.) This variable with be ignored for 2D rotations.
 
     type_output : str, optional (default="positional")
-        Determines how the outputs are returned. If set to "positional", it returns positional outputs. If set to "named", it returns a dictionary with named outputs.
+        Determines how the outputs are returned. If set to "positional", it returns positional outputs.
+        If set to "named", it returns a dictionary with named outputs.
 
     Returns
     -------
@@ -553,27 +555,13 @@ def generate_rotation(
         raise ValueError(f"expected a 1D, 2D, or 3D parameter_rotation, got {parameter_rotation.dim()!r}D instead")
     if parameter_rotation.shape[-1] not in (1, 3, 4):
         raise ValueError("unexpected shape of parameter_scaling")
-    if type_rotation.lower() not in (
-        "euler_xyz",
-        "euler_xzy",
-        "euler_yxz",
-        "euler_yzx",
-        "euler_zxy",
-        "euler_zyx",
-        "quaternions",
-    ):
-        raise ValueError(f"unknown value {type_rotation!r} for type_rotation")
-    if parameter_rotation.shape[-1] != 1:
-        if type_rotation.lower()[:5] == "euler" and parameter_rotation.shape[-1] != 3:
-            raise ValueError("mismatch between type_rotation and shape of parameter_rotation")
-        if type_rotation.lower() == "quaternions" and parameter_rotation.shape[-1] != 4:
-            raise ValueError("mismatch between type_rotation and shape of parameter_rotation")
-    if type_output.lower() not in ("positional", "named"):
-        raise ValueError(f"unknown value {type_output!r} for type_output")
 
-    # Update variables if required
-    type_rotation = type_rotation.lower()
-    type_output = type_output.lower()
+    if parameter_rotation.shape[-1] != 1:
+        if type_rotation[:5] == "euler" and parameter_rotation.shape[-1] != 3:
+            raise ValueError("mismatch between type_rotation and shape of parameter_rotation")
+        if type_rotation == "quaternions" and parameter_rotation.shape[-1] != 4:
+            raise ValueError("mismatch between type_rotation and shape of parameter_rotation")
+
     device = parameter_rotation.device
 
     # Generate identity transform
@@ -616,7 +604,8 @@ def generate_rotation(
         # Check if quaternions are normalised
         if torch.any(parameter_rotation.norm(dim=-1) < 1e-5):
             raise ValueError(
-                f"parameter_rotation of type Quaternion must be normalised. Got parameter_rotation.norm(dim=-1)={parameter_rotation.norm(dim=-1)} instead",
+                f"parameter_rotation of type Quaternion must be normalised. Got parameter_rotation.norm(dim=-1)\
+                ={parameter_rotation.norm(dim=-1)} instead",
             )
 
         # Separate quaternion components for readability

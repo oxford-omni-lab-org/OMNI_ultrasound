@@ -1,5 +1,8 @@
-""" Copied from:
-../../../shared/stru0039/fBAN/v1/mode.py
+"""
+This module contains the alignment model fBAN_v1 that aligns the input scan to a reference coordinate system.
+The rotations in this model are represented by quaternions.
+
+Copied from cluster: **../../../shared/stru0039/fBAN/v1/mode.py**
 
 """
 import torch
@@ -13,7 +16,18 @@ from src.alignment.kelluwen_transforms import (
 
 
 class AlignModel(nn.Module):
-    def __init__(self, shape_data, dimensions_hidden, size_kernel=3) -> None:
+    def __init__(
+        self,
+        shape_data: list[int] = [1, 160, 160, 160],
+        dimensions_hidden: list[int] = [16, 32, 64, 128, 256, 128, 64, 32],
+        size_kernel: int = 3,
+    ) -> None:
+        """Model class for the alignment model fBAN
+
+        :param shape_data: the input shape of the image
+        :param dimensions_hidden: the dimensions of the hidden layers in the network
+        :param size_kernel: convolutional kernel size, defaults to 3
+        """
         super(AlignModel, self).__init__()
 
         # Rename for readability
@@ -44,7 +58,7 @@ class AlignModel(nn.Module):
         # Deterministic
         self.maxpool = nn.MaxPool3d(2, 2)
 
-    def _conv_block(self, ch_in: int, ch_out: int, size_kernel):
+    def _conv_block(self, ch_in: int, ch_out: int, size_kernel: int) -> nn.Sequential:
         return nn.Sequential(
             nn.Conv3d(ch_in, ch_out, size_kernel, padding="same"),
             nn.BatchNorm3d(ch_out),
@@ -54,7 +68,12 @@ class AlignModel(nn.Module):
             nn.ReLU(),
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """forward pass of the model
+
+        :param x: batch of data of size [B, C, H, W, D]
+        :return: tuple of of size 3 containing the translation [B, 3], rotation [B, 4] and scaling [B, 3] parameters
+        """
         # Model X1
         hidden = self.enc_X1_cb00(x)
         hidden = self.enc_X1_cb01(self.maxpool(hidden))
@@ -108,7 +127,7 @@ class AlignModel(nn.Module):
         )
 
         # Combined transform
-        transform = transform_X2.matmul(transform_X1)
+        transform = transform_X2 @ transform_X1
 
         # Predicted parameters
         translation, rotation, scaling = deconstruct_affine(
@@ -116,5 +135,9 @@ class AlignModel(nn.Module):
             transform_order="srt",
             type_rotation="quaternions",
         )
+
+        assert isinstance(translation, torch.Tensor)
+        assert isinstance(rotation, torch.Tensor)
+        assert isinstance(scaling, torch.Tensor)
 
         return translation / 160, rotation, scaling
