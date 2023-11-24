@@ -19,11 +19,17 @@ BEAN_TO_ATLAS = Path("src/alignment/config/25wks_Atlas(separateHems)_mean_warped
 
 
 def load_alignment_model(model_path: Optional[Path] = None) -> AlignModel:
-    """Load the fBAN alignment model
+    """ Load the fBAN alignment model
+    Args:
+        model_path: path to the trained model, defaults to None (uses the default model)
 
-    :param model_path: path to the trained model, defaults to None (uses the default model)
-    :return: alignment model with trained weights loaded
+    Returns:
+        model: alignment model with trained weights loaded
+
+    Example:
+        >>> model = load_alignment_model()
     """
+
     if model_path is None:
         model_path = BAN_MODEL_PATH
 
@@ -44,8 +50,14 @@ def prepare_scan(image: np.ndarray) -> torch.Tensor:
     """Prepares the scan to be aligned with the alignment model.
     Normalises the scan between 0 and 1 and transforms the numpy array to pytorch.
 
-    :param example_scan: scan to be normalized and transformed
-    :return: pytorch tensor of the scan with pixel values between 0 and 1
+    Args:
+        image: scan to be normalized and transformed
+    Returns:
+        torch_imge: pytorch tensor of the scan with pixel values between 0 and 1
+
+    Example:
+        >>> dummy_scan = np.random.rand(160, 160, 160)
+        >>> torch_scan = prepare_scan(dummy_scan)
     """
 
     torch_image = torch.from_numpy(image)
@@ -81,13 +93,22 @@ def align_to_bean(
 ) -> Union[tuple[torch.Tensor, dict], tuple[torch.Tensor, dict, torch.Tensor]]:
     """Aligns the scan to the bean coordinate system using the fban model.
 
-    :param image: tensor of size [B,1,H,W,D] containing the image(s) to align
-    :param model: the model used for inference
-    :param scale: whether to apply scaling, defaults to True
-    :return affine: whether to return the affine transformation, defaults to False
-    :return: a tuple of the aligned image [B,1,H,W,D] and a dictionary containing the applied parameters or
-            a tuple of the aligned image [B,1,H,W,D], a diciontary containing the applied parameters
-            and a tensor containing the  affine transformation of size [B,4,4].
+    Args:
+        image:  tensor of size [B,1,H,W,D] containing the image(s) to align
+        model: the model used for inference
+        return_affine: whether to return the affine transformation, defaults to False
+        scale: whether to apply scaling, defaults to True
+
+    Returns:
+        aligned_image: tensor of size [B,1,H,W,D] containing the aligned image(s)
+        params: dictionary containing the applied parameters
+        affine (optional): tensor containing the affine transformation of size [B,4,4]
+
+    Example:
+        >>> model = load_alignment_model()
+        >>> dummy_scan = np.random.rand(160, 160, 160)
+        >>> torch_scan = prepare_scan(dummy_scan)
+        >>> aligned_scan, params = align_to_bean(torch_scan, model)
     """
 
     model.to(image.device)
@@ -129,16 +150,25 @@ def align_to_atlas(
     for scaled image volumes, so the affine transformation is always generated including scaling.
     If scaling is set to False, the inverse scaling transform is applied after transformation to the atlas space.
 
-    Flow (scale = True): scaled bean --> scaled atlas space
-    Flow (scale = False): scaled bean --> scaled atlas space --> unscaled atlas space
+    data flow (scale = True): scaled bean --> scaled atlas space \n
+    data flow (scale = False): scaled bean --> scaled atlas space --> unscaled atlas space
 
-    :param image: tensor of size [B,1,H,W,D] containing the image(s) to align
-    :param model: the model used for inference
-    :param scale: whether to apply scaling, defaults to True
-    :return affine: whether to return the affine transformation, defaults to False
-    :return: a tuple of the aligned image [B,1,H,W,D] and a dictionary containing the applied parameters or
-            a tuple of the aligned image [B,1,H,W,D], a diciontary containing the applied parameters
-            and a tensor containing the  affine transformation of size [B,4,4].
+    Args:
+        image: tensor of size [B,1,H,W,D] containing the image(s) to align
+        model: the model used for inference
+        scale: whether to apply scaling, defaults to True
+        return_affine: whether to return the affine transformation, defaults to False
+    
+    Returns:
+        aligned_to_atlas_scan: tensor of size [B,1,H,W,D] containing the aligned image(s)
+        param_dict: dictionary containing the applied parameters
+        affine (optional): tensor containing the affine transformation of size [B,4,4]
+
+    Example:
+        >>> model = load_alignment_model()
+        >>> dummy_scan = np.random.rand(160, 160, 160)
+        >>> torch_scan = prepare_scan(dummy_scan)
+        >>> aligned_scan, params = align_to_atlas(torch_scan, model)
     """
 
     model.to(image.device)
@@ -189,11 +219,20 @@ def transform_from_params(
     """Transforms the images in the input batch with the given translation, rotation and scaling parameters.
     If no parameters are given for a certain transformation, the default values that have no effect are used.
 
-    :param image: tensor of size [B,1, H,W,D] containing the image(s) to align
-    :param translation: tensor with size [B,3] containing translation for each axis, defaults to None
-    :param rotation: tensor with size [B,4] containing rotation quarternions, defaults to None
-    :param scaling: tensor with size [B,3] containing the scaling parameters, defaults to None
-    :return: tensor containing the aligned image
+    Args:
+        image: tensor of size [B,1, H,W,D] containing the image(s) to align
+        translation: tensor with size [B,3] containing translation for each axis between 0 and 1, defaults to None
+        rotation: tensor with size [B,4] containing rotation quarternions, defaults to None
+        scaling: tensor with size [B,3] containing the scaling parameters, defaults to None
+    
+    Returns:
+        image_aligned: tensor of size [B,1,H,W,D] containing the aligned image(s)
+
+    Example:
+        >>> dummy_scan = np.random.rand(160, 160, 160)
+        >>> torch_scan = prepare_scan(dummy_scan)
+        >>> translation = torch.tensor([[0.1, 0.05, 0.1]])
+        >>> aligned_scan = transform_from_params(torch_scan, translation=translation)
     """
     # set all parameters to default values if they are not given
     if translation is None:
@@ -225,22 +264,36 @@ def transform_from_params(
 def transform_from_affine(image: torch.Tensor, transform_affine: torch.Tensor) -> torch.Tensor:
     """Applies the given affine transformation to the input batch of images
 
-    :param image: tensor of size [B,1,H,W,D] containing the image(s) to align
-    :param transform_affine: tensor of size [B,4,4] containing the affine transformation(s)
-    :return: tensor containing the aligned image
+    Args:
+        image: tensor of size [B,1,H,W,D] containing the image(s) to align
+        transform_affine: tensor of size [B,4,4] containing the affine transformation(s)
+    
+    Returns:
+        image_transformed: tensor containing the aligned image
+
+    Example:
+        >>> dummy_scan = np.random.rand(160, 160, 160)
+        >>> torch_scan = prepare_scan(dummy_scan)
+        >>> transform_identity = torch.eye(4,4).unsqueeze(0)  # identity transform
+        >>> aligned_scan = transform_from_affine(torch_scan, transform_identity)
     """
 
     # apply transform to image
-    image_aligned = apply_affine(image, transform_affine, type_resampling="bilinear", type_origin="centre")
-    assert type(image_aligned) is torch.Tensor
+    image_transformed = apply_affine(image, transform_affine, type_resampling="bilinear", type_origin="centre")
+    assert type(image_transformed) is torch.Tensor
 
-    return image_aligned
+    return image_transformed
 
 
 def _get_atlastransform() -> torch.Tensor:
     """This generates the affine transformation matrix to go from the bean space to the atlas space
 
-    :return: _description_
+    Returns:
+        atlas_transform: tensor of size (1, 4, 4)
+    
+    Example:
+        >>> atlas_transform = _get_atlastransform()
+        >>> assert atlas_transform.shape == (1,4,4)
     """
 
     params_to_atlas = json.load(open(BEAN_TO_ATLAS, "r"))
@@ -266,7 +319,12 @@ def _get_transform_to_atlasspace() -> torch.Tensor:
     """This incorporates some permutations (implemented as rotation matrices) with the atlas transformation to go
     directly from aligned images in bean orientation to atlas space
 
-    :return: transformation matrix of size [1,4,4]
+    Returns:
+        total_transform: transformation matrix of size [1,4,4]
+
+    :example:
+        >>> atlas_transform = _get_transform_to_atlasspace()
+        >>> assert atlas_transform.shape == (1,4,4)
     """
 
     atlas_transform = _get_atlastransform()

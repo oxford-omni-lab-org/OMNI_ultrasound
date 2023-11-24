@@ -1,3 +1,10 @@
+""" 
+This modules contains helper functions for read and write I/O functions. Please use the functions to read/write 
+images when using the packages in this repository to ensure consistency. For example, niibabel and simpleITK read
+in image differently, which can cause problems when using these together. The read/write functions in this module
+have all been adapated so that they are consistent with each other.
+"""
+
 import numpy as np
 from pathlib import Path
 import SimpleITK as sitk
@@ -6,6 +13,9 @@ import nibabel as nib
 from typeguard import typechecked
 import matplotlib.pyplot as plt
 
+TEST_IMAGE_PATH = Path("test_data/09-8515_187days_1049.mha")
+TEST_SAVEPATH_MHA = Path("test_data/test.mha")
+
 
 @typechecked
 def _read_mha_image(
@@ -13,9 +23,14 @@ def _read_mha_image(
 ) -> Union[np.ndarray, tuple[np.ndarray, tuple[float, float, float]]]:
     """reads an sitk image, and returns the numpy array and optionally the spacing
 
-    :param vol_path: path to read the image from
-    :param return_info: whether to return the spacing and origin, defaults to False
-    :return: np.ndarray of the image or tuple of (np.ndarray, spacing)
+    Args:
+        vol_path: path to read the image from
+        return_info: whether to return the spacing and origin, defaults to False
+
+    Returns:
+        nii_array: np.ndarray of the image
+        itk_img.GetSpacing() (optional): spacing of the image
+
     """
 
     assert vol_path.exists(), f"vol_path does not exist: {vol_path}"
@@ -38,9 +53,14 @@ def _read_nii_image(
     vol_path: Path, return_info: bool = False
 ) -> Union[np.ndarray, tuple[np.ndarray, tuple[float, float, float]]]:
     """reads an nifti image, and returns the numpy array and optionally the spacing
-    :param vol_path: path to read the image from
-    :param return_info: whether to return the spacing and origin, defaults to False
-    :return: np.ndarray of the image or tuple of (np.ndarray, spacing)
+
+    Args:
+        vol_path: path to read the image from
+        return_info: whether to return the spacing and origin, defaults to False
+
+    Returns:
+        im_array: np.ndarray of the image of size [H, W, D]
+        spacing: spacing of the image (optional)
     """
     assert vol_path.exists(), f"vol_path does not exist: {vol_path}"
 
@@ -60,9 +80,18 @@ def _read_nii_image(
 def read_image(vol_path: Path) -> tuple[np.ndarray, tuple[float, float, float]]:
     """reads in an image, and returns the numpy array and spacing
 
-    :param vol_path: path to the image
-    :raises ValueError: when the path has an unknown file extension
-    :return: the numpy array and spacing
+    Args:
+        vol_path: path to the image
+
+    Raises:
+        ValueError: when the path has an unknown file extension
+
+    Returns:
+        nii_array: np.ndarray of the image
+        spacing: spacing of the image
+
+    Example:
+        >>> example_scan, spacing = read_image(TEST_IMAGE_PATH)
     """
     if vol_path.suffix == ".mha":
         nii_array, spacing = _read_mha_image(vol_path, return_info=True)
@@ -80,8 +109,15 @@ def generate_nii_affine(spacing: tuple[float, float, float]) -> np.ndarray:
     """generate the affine matrix from the spacing.
     The negative spacing for the first two dimensions is to ensure consistency with the mha format.
 
-    :param spacing: the spacing of the image
-    :return: the affine matrix
+    Args:
+        spacing: the spacing of the image
+
+    Returns:
+        affine: the affine matrix of size [4,4]
+
+    Example:
+        >>> affine = generate_nii_affine(spacing=(0.6, 0.6, 0.6))
+        >>> assert affine.shape == (4,4)
     """
 
     affine = np.eye(4, 4)
@@ -92,12 +128,17 @@ def generate_nii_affine(spacing: tuple[float, float, float]) -> np.ndarray:
 
 
 @typechecked
-def write_image(vol_path: Path, image_array: np.ndarray, spacing: tuple[float, float, float]) -> None:
+def write_image(vol_path: Path, image_array: np.ndarray, spacing: tuple[float, float, float] = (0.6, 0.6, 0.6)) -> None:
     """Saves a numpy array as an nifti or mha image, the type is determined by the file extension
 
-    :param vol_path: path to save the images to
-    :param image_array: numpy array with the image data
-    :param spacing: spacing of the pixels, defaults to (0.6, 0.6, 0.6)
+    Args:
+        vol_path: path to save the images to
+        image_array: numpy array with the image data
+        spacing: spacing of the pixels, defaults to (0.6, 0.6, 0.6)
+    
+    Example:
+        >>> test_image =  np.random.rand(160, 160, 160)
+        >>> write_image(TEST_SAVEPATH_MHA, test_image)
     """
 
     # check inputs
@@ -135,9 +176,16 @@ def write_image(vol_path: Path, image_array: np.ndarray, spacing: tuple[float, f
 def plot_midplanes(image: np.ndarray, title: str) -> plt.Figure:
     """plot the midplanes of a 3D image
 
-    :param image: 3D array of image data
-    :param title: title of the plot
-    :return: reference to the plot
+    Args:
+        image: 3D array of image data
+        title: title of the plot
+    
+    Returns:
+        fig: reference to the plot
+
+    Example:
+        >>> example_scan, spacing = read_image(TEST_IMAGE_PATH)
+        >>> fig = plot_midplanes(example_scan, "Original")
     """
 
     assert len(image.shape) == 3, "image must be 3D"

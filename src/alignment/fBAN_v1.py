@@ -1,5 +1,5 @@
 """
-This module contains the alignment model fBAN_v1 that aligns the input scan to a reference coordinate system.
+This module contains the architecture of the alignment model fBAN_v1 that aligns the input scan to a reference coordinate system.
 The rotations in this model are represented by quaternions.
 
 Copied from cluster: **../../../shared/stru0039/fBAN/v1/mode.py**
@@ -22,7 +22,8 @@ class AlignModel(nn.Module):
         dimensions_hidden: list[int] = [16, 32, 64, 128, 256, 128, 64, 32],
         size_kernel: int = 3,
     ) -> None:
-        """Model class for the alignment model fBAN
+        """ Model class for the alignment model fBAN that includes the architecture of the model and the forward pass.
+        
 
         :param shape_data: the input shape of the image
         :param dimensions_hidden: the dimensions of the hidden layers in the network

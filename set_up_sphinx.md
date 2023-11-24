@@ -13,9 +13,11 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode']
 ```
 
 
-Step 3: generate rst files
+Step 3: generate rst files (when being in docs folder)
 ```
-sphinx-apidoc -o docs/src src/
+sphinx-apidoc -o ./source  ../src -f -e
+
+sphinx-nested-apidoc --package-name fetalbrain -o source/ ../src (creates nested structure)
 ```
 
 Step 4: add the generated modules.rst in the index.rst file

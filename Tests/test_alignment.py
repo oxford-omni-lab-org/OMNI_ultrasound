@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import torch
+import doctest
 
 sys.path.append("/home/sedm6226/Documents/Projects/US_analysis_package")
 
@@ -21,6 +22,9 @@ from src.alignment.kelluwen_transforms import apply_affine  # noqa: E402
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 TEST_IMAGE_PATH = Path("src/alignment/test_data/06-5010_152days_0356.mha")
+
+
+doctest.testmod()
 
 
 def test_load_alignment_model() -> None:
@@ -207,7 +211,7 @@ def test_align_to_atlas_direct() -> None:
     plot_midplanes(aligned_to_atlas_unscaled.squeeze().cpu().numpy(), title="unscaled")
     plot_midplanes(aligned_to_atlas_scaled.squeeze().cpu().numpy(), title="scaled")
 
-    aligned_to_atlas_scaled_2step = transform_from_params(aligned_to_atlas_unscaled, scaling=transform_dict['scaling'])
+    aligned_to_atlas_scaled_2step = transform_from_params(aligned_to_atlas_unscaled, scaling=transform_dict["scaling"])
     plot_midplanes(aligned_to_atlas_scaled_2step.squeeze().cpu().numpy(), title="unscaled")
 
 

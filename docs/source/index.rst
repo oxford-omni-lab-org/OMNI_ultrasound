@@ -12,11 +12,7 @@ Welcome to FetalBrain's documentation!
 
    modules
 
-
-
-
-
-Indices and tables
+Indices and table
 ==================
 
 * :ref:`genindex`

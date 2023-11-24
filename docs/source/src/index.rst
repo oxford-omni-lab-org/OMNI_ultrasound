@@ -7,19 +7,16 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   src.alignment
-   src.structural_segmentation
+   alignment/index
+   structural_segmentation/index
 
 Submodules
 ----------
 
-src.utils module
-----------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: src.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   utils
 
 Module contents
 ---------------
