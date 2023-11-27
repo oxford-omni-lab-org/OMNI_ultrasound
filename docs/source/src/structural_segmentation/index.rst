@@ -1,5 +1,14 @@
-src.structural\_segmentation package
-====================================
+subcortical\_segmentation package
+=====================================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   segmentation_model
+   subcortical_segm
 
 Module contents
 ---------------

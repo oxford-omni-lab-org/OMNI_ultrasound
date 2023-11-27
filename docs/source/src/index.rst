@@ -1,4 +1,4 @@
-src package
+FetalBrain package
 ===========
 
 Subpackages

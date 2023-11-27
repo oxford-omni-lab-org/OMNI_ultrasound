@@ -10,7 +10,7 @@ Welcome to FetalBrain's documentation!
    :maxdepth: 4
    :caption: Contents:
 
-   modules
+   src/index
 
 Indices and table
 ==================

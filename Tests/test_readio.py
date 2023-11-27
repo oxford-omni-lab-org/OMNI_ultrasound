@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 import numpy as np
 import pytest
+import doctest 
 
 sys.path.append(str(Path(__file__).parent.parent))
 from src.utils import _read_mha_image, _read_nii_image, read_image, write_image, plot_midplanes  # noqa: E402
@@ -11,6 +12,8 @@ TEST_IMAGE_PATH_MHA = Path("test_data/09-8515_187days_1049.mha")
 TEST_IMAGE_PATH_INVALID = Path("test_data/09-8515_187days_1049.lb")
 TEST_SAVEPATH_MHA = Path("test_data/new_09-8515_187days_1049.mha")
 TEST_SAVEPATH_NII = Path("test_data/new_09-8515_187days_1049.nii.gz")
+
+doctest.testmod()
 
 
 def test_read_sitk_image() -> None:

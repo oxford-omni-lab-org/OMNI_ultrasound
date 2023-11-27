@@ -1,4 +1,4 @@
-src.utils module
+utils module
 ================
 
 .. automodule:: src.utils

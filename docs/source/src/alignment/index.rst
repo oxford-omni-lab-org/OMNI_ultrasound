@@ -1,4 +1,4 @@
-src.alignment package
+alignment package
 =====================
 
 Submodules
