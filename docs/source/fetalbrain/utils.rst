@@ -1,7 +1,7 @@
 utils module
 ================
 
-.. automodule:: src.utils
+.. automodule:: fetalbrain.utils
    :members:
    :undoc-members:
    :show-inheritance:

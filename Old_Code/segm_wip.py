@@ -44,3 +44,50 @@ write_image(path / 'aligned_image.nii.gz', aligned_scan[0,0].cpu().numpy(), spac
 segm_map = output[0].argmax(dim=0).cpu().numpy()
 
 write_image(write_path,segm_map, spacing=(0.6, 0.6, 0.6))
+
+
+from src.structural_segmentation.subcortical_segm import  segment_subcortical, prepare_scan_segm
+from src.structural_segmentation.subcortical_segm import compute_volume_segm
+aligned_scan_prep = prepare_scan_segm(aligned_scan)
+
+
+segm_map, key_maps  = segment_subcortical(aligned_scan_prep.permute((0,1, 4, 3, 2)), net)
+
+
+import SimpleITK as sitk
+
+segm_map = segm_map[0].cpu().numpy()
+
+import numpy as np
+
+
+def keep_largest_compoment(segm_map: np.ndarray) -> np.ndarray:
+
+    conn_comp_segm = np.zeros_like(segm_map)
+
+    # we assume 0 to be background so not connected component analysis
+    for classx in torch.unique(segm_map)[1:]:
+        single_class = np.where(segm_map == classx, 1, 0)
+
+        sitk_im = sitk.GetImageFromArray(single_class)
+        # assigns a unique label to each connected component
+        labels_cc = sitk.ConnectedComponent(sitk_im, True)
+
+        # relabels the components so that the largest component is 1
+        labels_ordered = sitk.RelabelComponent(labels_cc)
+        
+        # get the largest connected component
+        largest_cc = labels_ordered == 1
+
+        # convert to numpy array
+        largest_cc = sitk.GetArrayFromImage(largest_cc)
+
+        # get the original class_value back
+        largest_cc = largest_cc * classx
+
+        conn_comp_segm += largest_cc
+    
+    return conn_comp_segm
+
+
+

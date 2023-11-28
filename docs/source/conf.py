@@ -5,7 +5,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath('../../src'))
 print(sys.path)
 
 # -- Project information -----------------------------------------------------
@@ -13,7 +13,7 @@ print(sys.path)
 
 project = 'FetalBrain'
 copyright = '2023, L.S. Hesse'
-author = 'L.S. Hesse'
+author = 'Linde S. Hesse'
 release = '0.1'
 
 # -- General configuration ---------------------------------------------------
@@ -32,7 +32,6 @@ extensions = [
 
 autosummary_generate = True
 templates_path = ['_templates']
-exclude_patterns = []
 napoleon_custom_sections = [('Returns', 'params_style')]
 
 

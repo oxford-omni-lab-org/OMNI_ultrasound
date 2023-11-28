@@ -1,14 +1,13 @@
 """
-This module contains the architecture of the alignment model fBAN_v1 that aligns the input scan to a reference coordinate system.
-The rotations in this model are represented by quaternions.
+This module contains the architecture of the alignment model fBAN_v1 that aligns the input scan
+to a reference coordinate system. The rotations in this model are represented by quaternions.
 
 Copied from cluster: **../../../shared/stru0039/fBAN/v1/mode.py**
-
 """
 import torch
 import torch.nn as nn
 import torch.nn.functional as ff
-from src.alignment.kelluwen_transforms import (
+from .kelluwen_transforms import (
     generate_affine,
     apply_affine,
     deconstruct_affine,
@@ -23,7 +22,6 @@ class AlignModel(nn.Module):
         size_kernel: int = 3,
     ) -> None:
         """ Model class for the alignment model fBAN that includes the architecture of the model and the forward pass.
-        
 
         :param shape_data: the input shape of the image
         :param dimensions_hidden: the dimensions of the hidden layers in the network

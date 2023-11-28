@@ -21,7 +21,7 @@ Submodules
 Module contents
 ---------------
 
-.. automodule:: src
+.. automodule:: fetalbrain
    :members:
    :undoc-members:
    :show-inheritance:

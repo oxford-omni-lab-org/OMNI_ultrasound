@@ -31,3 +31,18 @@ things to consider:
 - checking validity of arguments at start of function\
 - whether to accept strings as input to read/write functions
 - how to test image similarity with different transforms
+- - minimize dependencies (try to limit to numpy, torch, sitk and nibabel)
+- - currently the imports in test do not recognize the package when in editable mode, added ignore statements to these lines
+
+# use editable mode to install package from root (US_analysis_package)
+pip install -e .
+
+
+Create new env:
+conda create --name package_test python==3.11
+
+# use light the torch to install pytorch
+pip install light-the-torch && ltt install torch
+
+# install package
+pip install -e .[dev,plot]

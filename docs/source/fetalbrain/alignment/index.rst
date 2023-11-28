@@ -14,7 +14,7 @@ Submodules
 Module contents
 ---------------
 
-.. automodule:: src.alignment
+.. automodule:: fetalbrain.alignment
    :members:
    :undoc-members:
    :show-inheritance:

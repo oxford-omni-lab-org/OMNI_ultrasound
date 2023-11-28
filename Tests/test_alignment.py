@@ -1,13 +1,9 @@
-import sys
 from pathlib import Path
 import torch
 import doctest
-
-sys.path.append("/home/sedm6226/Documents/Projects/US_analysis_package")
-
-from src.utils import read_image  # noqa: E402
-from src.alignment.fBAN_v1 import AlignModel  # noqa: E402
-from src.alignment.align import (  # noqa: E402
+from fetalbrain.utils import read_image
+from fetalbrain.alignment.fBAN_v1 import AlignModel
+from fetalbrain.alignment.align import (
     load_alignment_model,
     prepare_scan,
     align_to_bean,
@@ -16,12 +12,12 @@ from src.alignment.align import (  # noqa: E402
     _get_transform_to_atlasspace,
     align_to_atlas,
 )  # noqa: E402
-from src.utils import write_image, plot_midplanes  # noqa: E402
-from src.alignment.kelluwen_transforms import apply_affine  # noqa: E402
+from fetalbrain.utils import write_image, plot_midplanes
+from fetalbrain.alignment.kelluwen_transforms import apply_affine
 
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-TEST_IMAGE_PATH = Path("src/alignment/test_data/06-5010_152days_0356.mha")
+TEST_IMAGE_PATH = Path("src/fetalbrain/alignment/test_data/06-5010_152days_0356.mha")
 
 
 doctest.testmod()
@@ -111,8 +107,8 @@ def test_unalign_scan() -> None:
     # also write them to png to manually inspect
     fig_original = plot_midplanes(torch_scan.squeeze().cpu().numpy(), "Original")
     fig_unaligned = plot_midplanes(unaligned_im.squeeze().cpu().numpy(), "Unaligned")
-    fig_original.savefig("src/alignment/test_data/original.png")
-    fig_unaligned.savefig("src/alignment/test_data/unaligned.png")
+    fig_original.savefig("src/fetalbrain/alignment/test_data/original.png")
+    fig_unaligned.savefig("src/fetalbrain/alignment/test_data/unaligned.png")
 
 
 def test_scaling_twosteps() -> None:
@@ -131,12 +127,12 @@ def test_scaling_twosteps() -> None:
 
     # write images to compare them manually
     write_image(
-        Path("src/alignment/test_data/aligned_scan_onestep.nii.gz"),
+        Path("src/fetalbrain/alignment/test_data/aligned_scan_onestep.nii.gz"),
         aligned_scan.squeeze().cpu().numpy(),
         spacing=spacing,
     )
     write_image(
-        Path("src/alignment/test_data/aligned_scan_twostep.nii.gz"),
+        Path("src/fetalbrain/alignment/test_data/aligned_scan_twostep.nii.gz"),
         aligned_twostep.squeeze().cpu().numpy(),
         spacing=spacing,
     )
@@ -171,8 +167,8 @@ def test_permutations() -> None:
     # plot and save, these should look roughly similar (except for differences in stochasticity in network)
     fig_original = plot_midplanes(aligned_np, title="aligned scan")
     fig_permuted = plot_midplanes(aligned_perm_np, title="aligned scan perm")
-    fig_original.savefig("src/alignment/test_data/aligned_original.png")
-    fig_permuted.savefig("src/alignment/test_data/aligned_permuted.png")
+    fig_original.savefig("src/fetalbrain/alignment/test_data/aligned_original.png")
+    fig_permuted.savefig("src/fetalbrain/alignment/test_data/aligned_permuted.png")
 
 
 def test_align_to_atlas() -> None:
@@ -196,8 +192,8 @@ def test_align_to_atlas() -> None:
     fig_2step = plot_midplanes(aligned_atlas.squeeze().cpu().numpy(), title="aligned atlas")
     fig_direct = plot_midplanes(aligned_atlas_direct.squeeze().cpu().numpy(), title="aligned atlas direct")
 
-    fig_2step.savefig("src/alignment/test_data/align_to_atlas_2step.png")
-    fig_direct.savefig("src/alignment/test_data/align_to_atlas_1step.png")
+    fig_2step.savefig("src/fetalbrain/alignment/test_data/align_to_atlas_2step.png")
+    fig_direct.savefig("src/fetalbrain/alignment/test_data/align_to_atlas_1step.png")
 
 
 def test_align_to_atlas_direct() -> None:

@@ -1,7 +1,7 @@
 Kelluwen Transforms module
 =========================================
 
-.. automodule:: src.alignment.kelluwen_transforms
+.. automodule:: fetalbrain.alignment.kelluwen_transforms
    :members:
    :undoc-members:
    :show-inheritance:

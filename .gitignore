@@ -22,3 +22,6 @@ docs/build/
 # model weights + config (might want to change this at some point to include them)
 *.pt
 *.json
+
+build
+fetalbrain.egg-info

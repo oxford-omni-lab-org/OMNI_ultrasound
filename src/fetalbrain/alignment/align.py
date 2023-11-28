@@ -5,17 +5,13 @@ import json
 import torch
 import numpy as np
 from pathlib import Path
-import sys
 from typing import Optional, Union, overload, Literal
 from typeguard import typechecked
+from .kelluwen_transforms import generate_affine, apply_affine
+from .fBAN_v1 import AlignModel
 
-sys.path.append("/home/sedm6226/Documents/Projects/US_analysis_package")
-
-from src.alignment.kelluwen_transforms import generate_affine, apply_affine  # noqa: E402
-from src.alignment.fBAN_v1 import AlignModel  # noqa: E402
-
-BAN_MODEL_PATH = Path("src/alignment/config/model_weights.pt")
-BEAN_TO_ATLAS = Path("src/alignment/config/25wks_Atlas(separateHems)_mean_warped.json")
+BAN_MODEL_PATH = Path("src/fetalbrain/alignment/config/model_weights.pt")
+BEAN_TO_ATLAS = Path("src/fetalbrain/alignment/config/25wks_Atlas(separateHems)_mean_warped.json")
 
 
 def load_alignment_model(model_path: Optional[Path] = None) -> AlignModel:
@@ -158,7 +154,7 @@ def align_to_atlas(
         model: the model used for inference
         scale: whether to apply scaling, defaults to True
         return_affine: whether to return the affine transformation, defaults to False
-    
+
     Returns:
         aligned_to_atlas_scan: tensor of size [B,1,H,W,D] containing the aligned image(s)
         param_dict: dictionary containing the applied parameters
@@ -224,7 +220,7 @@ def transform_from_params(
         translation: tensor with size [B,3] containing translation for each axis between 0 and 1, defaults to None
         rotation: tensor with size [B,4] containing rotation quarternions, defaults to None
         scaling: tensor with size [B,3] containing the scaling parameters, defaults to None
-    
+
     Returns:
         image_aligned: tensor of size [B,1,H,W,D] containing the aligned image(s)
 
@@ -267,7 +263,7 @@ def transform_from_affine(image: torch.Tensor, transform_affine: torch.Tensor) -
     Args:
         image: tensor of size [B,1,H,W,D] containing the image(s) to align
         transform_affine: tensor of size [B,4,4] containing the affine transformation(s)
-    
+
     Returns:
         image_transformed: tensor containing the aligned image
 
@@ -290,7 +286,7 @@ def _get_atlastransform() -> torch.Tensor:
 
     Returns:
         atlas_transform: tensor of size (1, 4, 4)
-    
+
     Example:
         >>> atlas_transform = _get_atlastransform()
         >>> assert atlas_transform.shape == (1,4,4)
@@ -342,3 +338,35 @@ def _get_transform_to_atlasspace() -> torch.Tensor:
     total_transform = second_perm @ atlas_transform @ first_perm
 
     return total_transform
+
+
+def align_scan(scan: np.ndarray, scale: bool = False, to_atlas: bool = True) -> tuple[np.ndarray, dict]:
+    """ align a scan to a reference coordinate system
+
+    Args:
+        scan: array containing the scan of size [H,W,D]
+        scale: whether to apply scaling. Defaults to False.
+        to_atlas: whether to align to the atlas coordinate system, otherwise
+            the BEAN coordinate system is used (internal use). Defaults to True.
+
+    Returns:
+        aligned_scan: the aligned scan
+
+    Example:
+        >>> dummy_scan = np.random.rand(160, 160, 160)
+        >>> aligned_scan, params = align_scan(dummy_scan)
+    """
+
+    # load model
+    model = load_alignment_model()
+
+    # prepare scan
+    torch_scan = prepare_scan(scan)
+
+    # align scan
+    if to_atlas:
+        aligned_scan, params = align_to_atlas(torch_scan, model, scale=scale)  # type: ignore
+    else:
+        aligned_scan, params = align_to_bean(torch_scan, model, scale=scale)
+
+    return aligned_scan, params  # type: ignore

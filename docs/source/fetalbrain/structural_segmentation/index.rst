@@ -13,7 +13,7 @@ Submodules
 Module contents
 ---------------
 
-.. automodule:: src.structural_segmentation
+.. automodule:: fetalbrain.structural_segmentation
    :members:
    :undoc-members:
    :show-inheritance:

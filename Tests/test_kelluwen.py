@@ -1,10 +1,5 @@
-import sys
 import torch
-
-
-sys.path.append("/home/sedm6226/Documents/Projects/US_analysis_package")
-
-from src.alignment.kelluwen_transforms import (  # noqa: E402
+from fetalbrain.alignment.kelluwen_transforms import (
     deconstruct_affine,
     generate_affine,
     apply_affine,

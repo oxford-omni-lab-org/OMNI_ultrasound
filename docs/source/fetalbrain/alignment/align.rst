@@ -1,7 +1,7 @@
 Alignment module
 ==========================
 
-.. automodule:: src.alignment.align
+.. automodule:: fetalbrain.alignment.align
    :members:
    :undoc-members:
    :show-inheritance:
