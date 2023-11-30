@@ -32,7 +32,7 @@ things to consider:
 - whether to accept strings as input to read/write functions
 - how to test image similarity with different transforms
 - - minimize dependencies (try to limit to numpy, torch, sitk and nibabel)
-- - currently the imports in test do not recognize the package when in editable mode, added ignore statements to these lines
+- if using symbols in docstring, use ` ` to surround them (e.g. `*`), else this will lead to sphinx errors
 
 # use editable mode to install package from root (US_analysis_package)
 pip install -e .

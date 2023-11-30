@@ -3,7 +3,7 @@ This module contains helper functions to apply alignment parameters resulting fr
 necessary to access these functions directly when doing standard image alignment operations, as most are shadowed
 by functions in the main align.py module.
 
-These functions have been taken from 
+These functions have been taken from
 [Kelluwen Github](https://github.com/FelipeMoser/kelluwen/blob/main/kelluwen/functions/transforms.py).
 
 The functions were copied over to minimise dependendencies, and their style adjusted to match the rest of the codebase,
@@ -31,24 +31,26 @@ def deconstruct_affine(
     """Deconstructs the affine transform into its conforming translation, rotation, and scaling parameters.
 
     Args:
-        transform_affine:Affine transform being deconstructed. Must be of shape (batch, channel, *) or (batch, *)
+        transform_affine: Affine transform being deconstructed. Must be of shape (batch, channel, H, W, D)
+            or (batch, H, W, D).
         transform_order : Order of multiplication of translation, rotation, and scaling transforms, defaults to 'srt'
         type_rotation: Type of rotation parameters: quaternions or Euler angles. For Euler angles, the order of the
             multiplication of the rotations around x, y, and z is represented in the name (euler_xyz, euler_yzx, etc.),
             defaults to 'euler_xyz'
-        type_output : Determines how the outputs are returned. If set to "positional", it returns positional outputs.
-            If set to "named", it returns a dictionary with named outputs, defaults to 'positional'
+        type_output : Determines how the outputs are returned. If set to positional, it returns positional outputs.
+            If set to named, it returns a dictionary with named outputs, defaults to 'positional'
 
     Returns:
-        parameter_translation: tensor of size (batch, *, 3) (channel dimension is optional, based on whether channel
+        parameter_translation: tensor of size (batch, C, 3) (channel dimension is optional, based on whether channel
             dimension is present in input affine)
-        parameter_rotation : tensor of size (batch, *, 3) (if type_rotation is euler_...) or
+        parameter_rotation : tensor of size (batch, C, 3) (if type_rotation is euler) or
             (batch, channel, 4) (if type_rotation is 'quaternions')
-        parameter_scaling : tensor of size [batch, *, 3]
+        parameter_scaling : tensor of size [batch, C, 3]
 
     Example:
         >>> transform_affine = torch.eye(4,4, dtype=torch.float32).unsqueeze(0)
-        >>> transl, rot, scale = deconstruct_affine(transform_affine, transform_order='srt', type_rotation='euler_xyz', type_output='positional')
+        >>> transl, rot, scale = deconstruct_affine(transform_affine, transform_order='srt', type_rotation='euler_xyz',\
+            type_output='positional')
 
     """
 
@@ -192,18 +194,18 @@ def apply_affine(
     """Applies affine transform to tensor.
 
     Args:
-        image : image being transformed. Must be of shape (batch, channel, *).
-        transform_affine : affine transform being applied. Must be of shape (batch, channel, *),
-            (batch, 1, *), or (batch, *).
-        shape_output : Output shape of transformed image. Must have the same batch and channel as image.
+        image: image being transformed. Must be of shape (batch, channel, `*`).
+        transform_affine: affine transform being applied. Must be of shape (batch, channel, `*`),
+            (batch, 1, `*`), or (batch, `*`).
+        shape_output: Output shape of transformed image. Must have the same batch and channel as image.
             If None, the output_shape=image.shape. Defaults to None.
         type_resampling: interpolation algorithm used when sampling image. Available: bilinear, nearest
         type_origin: point around which the transform is applied, defaults to centre
-        type_output: Determines how the outputs are returned. If set to "positional", it returns positional outputs.
-            If set to "named", it returns a dictionary with named outputs.
+        type_output: Determines how the outputs are returned. If set to positional, it returns positional outputs.
+            If set to named, it returns a dictionary with named outputs.
 
     Returns:
-        image_transformed : torch.Tensor
+        image_transformed
 
     Example:
         >>> image = torch.rand((1, 1, 160, 160, 160))
@@ -352,8 +354,8 @@ def generate_affine(
     """Generates an affine transform from translation, rotation, and scaling parameters.
 
     Args:
-        parameter_translation: Translation parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
-            with parameters=2 or 3 for 2D and 3D images, respectively.
+        parameter_translation: Translation parameters. Must be of shape (batch, channel, parameters) or
+            (batch, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
         parameter_rotation: Rotation parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
             with parameters=1, 3 or 4, for 2D, 3D Euler angles, and 3D quaternions, respectively.
         parameter_scaling : Scaling parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
@@ -374,7 +376,8 @@ def generate_affine(
         >>> parameter_rotation = torch.rand((1, 4))
         >>> parameter_scaling = torch.rand((1, 3))
 
-        >>> transform_affine = generate_affine(parameter_translation, parameter_rotation, parameter_scaling, type_rotation='quaternions')
+        >>> transform_affine = generate_affine(parameter_translation, parameter_rotation, parameter_scaling,\
+            type_rotation='quaternions')
     """
     # Validate arguments
     if (
