@@ -2,7 +2,7 @@ import torch
 from pathlib import Path
 from typing import Optional
 import numpy as np
-from fetalbrain.alignment.align import _get_transform_to_atlasspace
+#from fetalbrain.alignment.align import _get_transform_to_atlasspace
 
 
 SIDE_DETECTOR_MODEL_PATH = Path("src/fetalbrain/tedsnet_multi/network/FinalModel_sidedetection.pt")
@@ -47,11 +47,9 @@ def detect_side(aligned_scan: torch.Tensor, model: torch.nn.Module) -> int:
         pred:
 
     """
-    
     aligned_scan = aligned_scan.permute(0, 1, 4, 3, 2)
     midslice = aligned_scan[:, 0, 79:82, :, :]
     outputs = torch.sigmoid(model(midslice * 255)).detach().cpu().numpy()
     pred = np.argmax(outputs)
 
-    return pred
-
+    return pred, outputs[pred]

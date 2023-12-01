@@ -1,4 +1,4 @@
-Alignment module
+Alignment
 ==========================
 
 .. automodule:: fetalbrain.alignment.align

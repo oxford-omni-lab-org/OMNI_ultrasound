@@ -152,8 +152,6 @@ def segment_scan_tedsall(aligned_scan: torch.Tensor) -> tuple[np.ndarray, dict]:
     segm_model = load_tedsmulti_model().to(aligned_scan.device)
     aligned_scan = prepare_scan_segm(aligned_scan)
 
-    
-
     # side is now hardcode, this has to change into model prediction
     multiclass, keys = segment_tedsall(aligned_scan, segm_model, side="r")
 

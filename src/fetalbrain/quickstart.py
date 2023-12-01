@@ -2,7 +2,7 @@ from pathlib import Path
 from fetalbrain.utils import read_image, write_image
 from fetalbrain.alignment.align import align_scan
 from fetalbrain.structural_segmentation.subcortical_segm import segment_scan_subc
-from fetalbrain.tedsnet_multi.plain_segmenter import segment_scan_tedsall
+from fetalbrain.tedsnet_multi.teds_multi_segm import segment_scan_tedsall
 
 TEST_IMAGE_PATH = Path("src/fetalbrain/alignment/test_data/06-5010_152days_0356.mha")
 

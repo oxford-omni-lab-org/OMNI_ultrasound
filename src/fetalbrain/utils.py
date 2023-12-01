@@ -1,5 +1,5 @@
-""" 
-This modules contains helper functions for read and write I/O functions. Please use the functions to read/write 
+"""
+This modules contains helper functions for read and write I/O functions. Please use the functions to read/write
 images when using the packages in this repository to ensure consistency. For example, niibabel and simpleITK read
 in image differently, which can cause problems when using these together. The read/write functions in this module
 have all been adapated so that they are consistent with each other.
@@ -10,6 +10,7 @@ from pathlib import Path
 import SimpleITK as sitk
 from typing import Union
 import nibabel as nib
+from typing import Optional
 from typeguard import typechecked
 import matplotlib.pyplot as plt
 
@@ -21,7 +22,7 @@ TEST_SAVEPATH_MHA = Path("test_data/test.mha")
 def _read_mha_image(
     vol_path: Path, return_info: bool = False
 ) -> Union[np.ndarray, tuple[np.ndarray, tuple[float, float, float]]]:
-    """reads an sitk image, and returns the numpy array and optionally the spacing
+    """ Reads an sitk image, and returns the numpy array and optionally the spacing
 
     Args:
         vol_path: path to read the image from
@@ -52,7 +53,7 @@ def _read_mha_image(
 def _read_nii_image(
     vol_path: Path, return_info: bool = False
 ) -> Union[np.ndarray, tuple[np.ndarray, tuple[float, float, float]]]:
-    """reads an nifti image, and returns the numpy array and optionally the spacing
+    """ Reads an nifti image, and returns the numpy array and optionally the spacing
 
     Args:
         vol_path: path to read the image from
@@ -78,7 +79,7 @@ def _read_nii_image(
 
 @typechecked
 def read_image(vol_path: Path) -> tuple[np.ndarray, tuple[float, float, float]]:
-    """reads in an image, and returns the numpy array and spacing
+    """Reads in an image, and returns the numpy array and spacing
 
     Args:
         vol_path: path to the image
@@ -106,7 +107,7 @@ def read_image(vol_path: Path) -> tuple[np.ndarray, tuple[float, float, float]]:
 
 
 def generate_nii_affine(spacing: tuple[float, float, float]) -> np.ndarray:
-    """generate the affine matrix from the spacing.
+    """ Generate the affine matrix from the spacing.
     The negative spacing for the first two dimensions is to ensure consistency with the mha format.
 
     Args:
@@ -135,7 +136,7 @@ def write_image(vol_path: Path, image_array: np.ndarray, spacing: tuple[float, f
         vol_path: path to save the images to
         image_array: numpy array with the image data
         spacing: spacing of the pixels, defaults to (0.6, 0.6, 0.6)
-    
+
     Example:
         >>> test_image =  np.random.rand(160, 160, 160)
         >>> write_image(TEST_SAVEPATH_MHA, test_image)
@@ -174,12 +175,12 @@ def write_image(vol_path: Path, image_array: np.ndarray, spacing: tuple[float, f
 
 
 def plot_midplanes(image: np.ndarray, title: str) -> plt.Figure:
-    """plot the midplanes of a 3D image
+    """Plot the midplanes of a 3D image
 
     Args:
         image: 3D array of image data
         title: title of the plot
-    
+
     Returns:
         fig: reference to the plot
 
@@ -191,7 +192,7 @@ def plot_midplanes(image: np.ndarray, title: str) -> plt.Figure:
     assert len(image.shape) == 3, "image must be 3D"
 
     midplanes = np.array(image.shape) // 2
-    fig, axes = plt.subplots(1, 3)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 6))
     axes[0].imshow(image[midplanes[0], :, :], cmap="gray")
     axes[0].set_axis_off()
     axes[0].set_title("1 plane")
@@ -204,7 +205,71 @@ def plot_midplanes(image: np.ndarray, title: str) -> plt.Figure:
     axes[2].set_axis_off()
     axes[2].set_title("3 plane")
 
-    fig.suptitle(title)
+    fig.suptitle(title, fontsize=30)
+    fig.tight_layout()
+
+    return fig
+
+
+def plot_planes_segm(image: np.ndarray, segmentation: np.ndarray, title: Optional[str] = None) -> plt.Figure:
+    """Plot planes of a 3D image and segmentation to demonstrate segmentation results.
+
+    TO-DO: Plot this properly with a colorbar and labels (taking a dictionary as input with class names)
+
+    Args:
+        image: 3D array of image data
+        segmentation: 3D array of segmentation data
+        title: title of the plot
+
+    Returns:
+        fig: reference to the plot
+
+    Example:
+        >>> example_scan, spacing = read_image(TEST_IMAGE_PATH)
+        >>> fig = plot_midplanes(example_scan, "Original")
+    """
+
+    assert len(image.shape) == 3, "image must be 3D"
+
+    max_color = np.max(segmentation)
+
+    midplanes = [70, 80, 90]
+    fig, axes = plt.subplots(1, 3, figsize=(15, 6))
+    axes[0].imshow(image[midplanes[0], :, :], cmap="gray")
+    axes[0].imshow(
+        segmentation[midplanes[0], :, :],
+        alpha=0.5 * (segmentation[midplanes[0]] > 0),
+        cmap="gist_rainbow",
+        vmin=0,
+        vmax=max_color,
+    )
+    axes[0].set_axis_off()
+    axes[0].set_title("1 plane")
+
+    axes[1].imshow(image[:, midplanes[1], :], cmap="gray")
+    axes[1].imshow(
+        segmentation[:, midplanes[1], :],
+        alpha=0.5 * (segmentation[:, midplanes[1]] > 0),
+        cmap="gist_rainbow",
+        vmin=0,
+        vmax=max_color,
+    )
+    axes[1].set_axis_off()
+    axes[1].set_title("2 plane")
+
+    axes[2].imshow(image[:, :, midplanes[2]], cmap="gray")
+    axes[2].imshow(
+        segmentation[:, :, midplanes[2]],
+        alpha=0.5 * (segmentation[:, :, midplanes[2]] > 0),
+        cmap="gist_rainbow",
+        vmin=0,
+        vmax=max_color,
+    )
+    axes[2].set_axis_off()
+    axes[2].set_title("3 plane")
+
+    if title is not None:
+        fig.suptitle(title, fontsize=30)
     fig.tight_layout()
 
     return fig

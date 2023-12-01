@@ -1,5 +1,29 @@
 """
-This module contains the main access functions for aligning the input scan to a reference coordinate system.
+This module contains the main functions for aligning the scans.
+
+A single scan be aligned using the :func:`align_scan` function, which is a wrapper that loads the alignment model,
+prepares the scan into pytorch and computes and applies the alignment transformation. The alignment can be
+applied without scaling (i.e. preserving the size of the brain) or with scaling (i.e. scaling all images to the
+same reference brain size at 30GWs).
+    >>> dummy_scan = np.random.rand(160, 160, 160)
+    >>> aligned_scan, params = align_scan(dummy_scan, scaling=False)
+    >>> aligned_scan_scaled, params = align_scan(dummy_scan, scale=True)
+
+For aligning a large number of scans,
+it is recommended to access the functions :func:`load_alignment_model`, :func:`prepare_scan` and the
+:func:`align_to_atlas` functions directly so that the alignment model is not reloaded for the alignment of each scan.
+For example as follows:
+    >>> model = load_alignment_model()
+    >>> for scan_path in scan_paths:
+    >>>     scan = read_image(scan_path)
+    >>>     torch_scan = prepare_scan(scan)
+    >>>     aligned_scan, params = align_to_atlas(torch_scan, model)
+
+The :func:`align_to_atlas` function can also process batches of data (i.e. multiple scans at once), which can be useful
+to speed up analysis. More advanced examples can be found in the Example Gallery.
+
+Module functions
+---------
 """
 import json
 import torch
@@ -8,13 +32,13 @@ from pathlib import Path
 from typing import Optional, Union, overload, Literal
 from typeguard import typechecked
 from .kelluwen_transforms import generate_affine, apply_affine
-from .fBAN_v1 import AlignModel
+from .fBAN_v1 import AlignmentModel
 
 BAN_MODEL_PATH = Path("src/fetalbrain/alignment/config/model_weights.pt")
 BEAN_TO_ATLAS = Path("src/fetalbrain/alignment/config/25wks_Atlas(separateHems)_mean_warped.json")
 
 
-def load_alignment_model(model_path: Optional[Path] = None) -> AlignModel:
+def load_alignment_model(model_path: Optional[Path] = None) -> AlignmentModel:
     """ Load the fBAN alignment model
     Args:
         model_path: path to the trained model, defaults to None (uses the default model)
@@ -30,7 +54,7 @@ def load_alignment_model(model_path: Optional[Path] = None) -> AlignModel:
         model_path = BAN_MODEL_PATH
 
     # instantiate model
-    model = AlignModel()
+    model = AlignmentModel()
     model_weights = torch.load(model_path)
     model.load_state_dict(model_weights, strict=True)
 
@@ -72,20 +96,20 @@ def prepare_scan(image: np.ndarray) -> torch.Tensor:
 # Function overload to make mypy recognize different return types
 @overload
 def align_to_bean(
-    image: torch.Tensor, model: AlignModel, return_affine: Literal[False] = False, scale: bool = True
+    image: torch.Tensor, model: AlignmentModel, return_affine: Literal[False] = False, scale: bool = False
 ) -> tuple[torch.Tensor, dict]:
     ...
 
 
 @overload
 def align_to_bean(
-    image: torch.Tensor, model: AlignModel, return_affine: Literal[True], scale: bool = True
+    image: torch.Tensor, model: AlignmentModel, return_affine: Literal[True], scale: bool = False
 ) -> tuple[torch.Tensor, dict, torch.Tensor]:
     ...
 
 
 def align_to_bean(
-    image: torch.Tensor, model: AlignModel, return_affine: bool = False, scale: bool = True
+    image: torch.Tensor, model: AlignmentModel, return_affine: bool = False, scale: bool = False
 ) -> Union[tuple[torch.Tensor, dict], tuple[torch.Tensor, dict, torch.Tensor]]:
     """Aligns the scan to the bean coordinate system using the fban model.
 
@@ -93,7 +117,7 @@ def align_to_bean(
         image:  tensor of size [B,1,H,W,D] containing the image(s) to align
         model: the model used for inference
         return_affine: whether to return the affine transformation, defaults to False
-        scale: whether to apply scaling, defaults to True
+        scale: whether to apply scaling, defaults to False
 
     Returns:
         aligned_image: tensor of size [B,1,H,W,D] containing the aligned image(s)
@@ -137,7 +161,7 @@ def align_to_bean(
 
 
 def align_to_atlas(
-    image: torch.Tensor, model: AlignModel, scale: bool = False, return_affine: bool = False
+    image: torch.Tensor, model: AlignmentModel, scale: bool = False, return_affine: bool = False
 ) -> Union[tuple[torch.Tensor, dict], tuple[torch.Tensor, dict, torch.Tensor]]:
     """
     Aligns the scan to the atlas coordinate system using the fban model.
@@ -152,7 +176,7 @@ def align_to_atlas(
     Args:
         image: tensor of size [B,1,H,W,D] containing the image(s) to align
         model: the model used for inference
-        scale: whether to apply scaling, defaults to True
+        scale: whether to apply scaling, defaults to False
         return_affine: whether to return the affine transformation, defaults to False
 
     Returns:
@@ -342,6 +366,10 @@ def _get_transform_to_atlasspace() -> torch.Tensor:
 
 def align_scan(scan: np.ndarray, scale: bool = False, to_atlas: bool = True) -> tuple[np.ndarray, dict]:
     """ align a scan to a reference coordinate system
+
+    This function aligns the input scan to either the atlas or bean coordinate system, with the
+    atlas space as default. This function is a wrapper that loads the alignment model, prepares
+    the scan and computes and applies the transformation.
 
     Args:
         scan: array containing the scan of size [H,W,D]

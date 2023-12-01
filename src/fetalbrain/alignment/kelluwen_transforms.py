@@ -1,12 +1,15 @@
 """
-This module contains helper functions to apply alignment parameters resulting from fBAN_v1 to an image. It is likely not
+This module contains helper functions to apply alignment parameters resulting from fBAN to an image. It is likely not
 necessary to access these functions directly when doing standard image alignment operations, as most are shadowed
 by functions in the main align.py module.
 
-These functions have been taken from
-[Kelluwen Github](https://github.com/FelipeMoser/kelluwen/blob/main/kelluwen/functions/transforms.py).
+These functions have been taken from the
+`Kelluwen Github <https://github.com/FelipeMoser/kelluwen/blob/main/kelluwen/functions/transforms.py>`_.
 
-The functions were copied over to minimise dependendencies, and their style adjusted to match the rest of the codebase,
+The functions were copied over to minimise dependendencies, and their style adjusted to match the rest of the codebase.
+
+Module functions
+----------------
 
 """
 
@@ -31,8 +34,8 @@ def deconstruct_affine(
     """Deconstructs the affine transform into its conforming translation, rotation, and scaling parameters.
 
     Args:
-        transform_affine: Affine transform being deconstructed. Must be of shape (batch, channel, H, W, D)
-            or (batch, H, W, D).
+        transform_affine: Affine transform being deconstructed. Must be of shape (B, C, H, W, D)
+            or (B, H, W, D).
         transform_order : Order of multiplication of translation, rotation, and scaling transforms, defaults to 'srt'
         type_rotation: Type of rotation parameters: quaternions or Euler angles. For Euler angles, the order of the
             multiplication of the rotations around x, y, and z is represented in the name (euler_xyz, euler_yzx, etc.),
@@ -41,11 +44,11 @@ def deconstruct_affine(
             If set to named, it returns a dictionary with named outputs, defaults to 'positional'
 
     Returns:
-        parameter_translation: tensor of size (batch, C, 3) (channel dimension is optional, based on whether channel
+        parameter_translation: tensor of size (B, C, 3) (channel dimension is optional, based on whether channel
             dimension is present in input affine)
-        parameter_rotation : tensor of size (batch, C, 3) (if type_rotation is euler) or
-            (batch, channel, 4) (if type_rotation is 'quaternions')
-        parameter_scaling : tensor of size [batch, C, 3]
+        parameter_rotation : tensor of size (B, C, 3) (if type_rotation is euler) or
+            (B, C,  4) (if type_rotation is 'quaternions')
+        parameter_scaling : tensor of size [B, C, 3]
 
     Example:
         >>> transform_affine = torch.eye(4,4, dtype=torch.float32).unsqueeze(0)
@@ -194,9 +197,9 @@ def apply_affine(
     """Applies affine transform to tensor.
 
     Args:
-        image: image being transformed. Must be of shape (batch, channel, `*`).
-        transform_affine: affine transform being applied. Must be of shape (batch, channel, `*`),
-            (batch, 1, `*`), or (batch, `*`).
+        image: image being transformed. Must be of shape (B, C, `*`).
+        transform_affine: affine transform being applied. Must be of shape (B, C, `*`),
+            (B, 1, `*`), or (B, `*`).
         shape_output: Output shape of transformed image. Must have the same batch and channel as image.
             If None, the output_shape=image.shape. Defaults to None.
         type_resampling: interpolation algorithm used when sampling image. Available: bilinear, nearest
@@ -354,11 +357,11 @@ def generate_affine(
     """Generates an affine transform from translation, rotation, and scaling parameters.
 
     Args:
-        parameter_translation: Translation parameters. Must be of shape (batch, channel, parameters) or
-            (batch, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
-        parameter_rotation: Rotation parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
+        parameter_translation: Translation parameters. Must be of shape (B, C, parameters) or
+            (B, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
+        parameter_rotation: Rotation parameters. Must be of shape (B, C,  parameters) or (B, parameters),
             with parameters=1, 3 or 4, for 2D, 3D Euler angles, and 3D quaternions, respectively.
-        parameter_scaling : Scaling parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
+        parameter_scaling : Scaling parameters. Must be of shape (B, C,  parameters) or (B, parameters),
             with parameters=2 or 3 for 2D and 3D images, respectively.
         type_rotation: Type of rotation parameters: quaternions or Euler angles. For Euler angles, the order of the
             multiplication of the rotations around x, y, and z is represented in the name  (euler_xyz, euler_yzx, etc.),
@@ -368,7 +371,7 @@ def generate_affine(
         If set to "named", it returns a dictionary with named outputs. Defaults to 'positional'.
 
     Returns:
-        transform_affine : torch.Tensor of shape (batch, channel, 4, 4)
+        transform_affine : torch.Tensor of shape (B, C,  4, 4)
         or dictionary: {"transform_affine": transform_affine}
 
     Example:
@@ -422,8 +425,8 @@ def generate_translation(
     """Generates a translation transform from translation parameters.
 
     Args:
-        parameter_translation: Translation parameters. Must be of shape (batch, channel, parameters)
-            or (batch, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
+        parameter_translation: Translation parameters. Must be of shape (B, C,  parameters)
+            or (B, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
         type_output: Determines how the outputs are returned. If set to "positional",
             it returns positional outputs. If set to "named", it returns a dictionary with named outputs,
             defaults to "positional"
@@ -434,7 +437,7 @@ def generate_translation(
         ValueError: An error occured because type_output is not "positional" or "named"
 
     Returns:
-        transform_translation: torch.Tensor of shape (batch, channel, 4, 4)
+        transform_translation: torch.Tensor of shape (B, C,  4, 4)
         or dictionary: {"transform_affine": transform_affine}
 
     Example:
@@ -475,13 +478,13 @@ def generate_scaling(
     """Generates a scaling transform from scaling parameters.
 
     Args:
-        parameter_scaling: Scaling parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
+        parameter_scaling: Scaling parameters. Must be of shape (B, C,  parameters) or (B, parameters),
             with parameters=2 or 3 for 2D and 3D images, respectively.
         type_output: Determines how the outputs are returned. If set to "positional", it returns positional outputs.
             If set to "named", it returns a dictionary with named outputs. Defaults to positional.
 
     Returns:
-        transform_scaling: tensor of shape (batch, channel, 4, 4)
+        transform_scaling: tensor of shape (B, C,  4, 4)
 
     Example:
         >>> parameter_scaling = torch.rand((1, 3))
@@ -519,7 +522,7 @@ def generate_rotation(
     """Generates a rotation transform from rotation parameters.
 
     Args:
-        parameter_rotation : Rotation parameters. Must be of shape (batch, channel, parameters) or (batch, parameters),
+        parameter_rotation : Rotation parameters. Must be of shape (B, C,  parameters) or (B, parameters),
             with parameters=1, 3 or 4, for 2D, 3D Euler angles, and 3D quaternions, respectively.
         type_rotation: Type of rotation parameters: quaternions or Euler angles. For Euler angles, the order of the
             multiplication of the rotations around x, y, and z is represented in the
@@ -529,7 +532,7 @@ def generate_rotation(
             If set to "named", it returns a dictionary with named outputs. Defaults to positional
 
     Returns:
-        transform_rotation: tensor of shape (batch, channel, 4, 4)
+        transform_rotation: tensor of shape (B, C,  4, 4)
 
     Example:
         # Rotation transform for quaternions

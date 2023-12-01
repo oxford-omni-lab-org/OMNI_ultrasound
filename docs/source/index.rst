@@ -12,6 +12,7 @@ Welcome to FetalBrain's documentation!
 
    quickstart
    fetalbrain/index
+   GitHub repository <https://github.com/lindehesse/OMNI_ultrasound>
 
 Indices and table
 ==================

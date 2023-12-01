@@ -5,7 +5,7 @@ import SimpleITK as sitk
 import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Literal
-from fetalbrain.tedsnet_multi.plain_segmenter import (
+from fetalbrain.tedsnet_multi.teds_multi_segm import (
     load_tedsmulti_model,
     get_prior_shape_sa,
     generate_multiclass_prediction,

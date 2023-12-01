@@ -5,7 +5,7 @@ import SimpleITK as sitk
 import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Literal
-from fetalbrain.tedsnet_multi.plain_segmenter import (
+from fetalbrain.tedsnet_multi.teds_multi_segm import (
     load_tedsmulti_model,
     get_prior_shape_sa,
     generate_multiclass_prediction,
@@ -17,6 +17,7 @@ from fetalbrain.utils import read_image, write_image, plot_midplanes
 from fetalbrain.structural_segmentation.subcortical_segm import prepare_scan_segm
 from fetalbrain.alignment.align import align_scan
 from fetalbrain.tedsnet_multi.network.TEDS_Net import TEDS_Net
+
 def setup_netw():
     net = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=False,num_classes=2)
     state_dict= torch.load("/home/sedm6226/Documents/Projects/US_analysis_package/src/fetalbrain/tedsnet_multi/network/FinalModel_sidedetection.pt")

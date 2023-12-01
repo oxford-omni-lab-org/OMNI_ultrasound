@@ -1,3 +1,8 @@
+"""
+This module contains the 3D Unet architecture for multiclass subcortical segmentation, as described in
+(`Hesse et al. NeuroImage, 2022 <https://doi.org/10.1016/j.neuroimage.2022.119117>`_).
+
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -158,6 +163,13 @@ class UNet(nn.Module):
     before any last layer activation. In practice, a soft-max activation should be applied to the
     channel dimension of the logits to obtain a multi-class prediction.
 
+    Args:
+        n_channels: number of channel in the input image
+        n_classes: number of output classes in the prediction. Defaults to 5.
+        min_featuremaps: number of feature maps in the first encoder block. Defaults to 64.
+        depth: depth of the unet architecture. Defaults to 5.
+        transposed_conv: whether to use transposed convolutions for upsampling. Defaults to False.
+
     Example:
         >>> input_im = torch.rand((1, 1, 160, 160, 160)) * 255
         >>> model = UNet(1, 5, min_featuremaps=16, depth=5)
@@ -173,14 +185,6 @@ class UNet(nn.Module):
         depth: int = 5,
         transposed_conv: bool = False,
     ):
-        """
-        Args:
-            n_channels: number of channel in the input image
-            n_classes: number of output classes in the prediction. Defaults to 5.
-            min_featuremaps: number of feature maps in the first encoder block. Defaults to 64.
-            depth: depth of the unet architecture. Defaults to 5.
-            transposed_conv: whether to use transposed convolutions for upsampling. Defaults to False.
-        """
         super(UNet, self).__init__()
         self.n_channels = n_channels
         self.n_channels = n_classes
@@ -208,7 +212,8 @@ class UNet(nn.Module):
         self.outc = _OutConv(min_featuremaps, n_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
+        """ Makes a prediction for a batch of images
+
         Args:
             x: tensor with input image of size [B, C_in, H, W, D] with pixel values between 0 and 255
 

@@ -1,3 +1,34 @@
+"""
+This module contains the main functions for performing subcortical segmentations on unscaled aligned scans.
+As post-processing step, only the largest connected component of each class is kept by default. Doing
+this post-processing step can be disabled by setting the connected_component argument to False.
+
+A single scan can be segmented using the :func:`segment_scan_subc` function, which is a wrapper that loads
+the segmentation model, prepares the scan for segmentation and predicts the segmentation mask.
+    >>> aligned_scan = torch.rand((160, 160, 160))
+    >>> segm_pred_np, key_maps = segment_scan_subc(aligned_scan, connected_component=True)
+
+As for the alignment, it is recommended to use the functions :func:`load_segmentation_model`,
+:func:`prepare_scan_segm`, and :func:`segment_subcortical` directly to have more control over the
+workflow. This can for example be used as follows:
+    >>> segm_model = load_segmentation_model()
+    >>> for scan in aligned_scans:
+    >>>     aligned_scan_prep = prepare_scan_segm(aligned_scan)
+    >>>     segm_pred, key_maps = segment_subcortical(aligned_scan_prep, segm_model)
+    >>>     if connected_component:
+    >>>         segm_pred = keep_largest_compoment(segm_pred)
+
+The :func:`segment_subcortical` function can also process batches of data (i.e. multiple scans at once),
+which can be useful to speed up analysis. More advanced examples can be found in the Example Gallery.
+
+Lastly, the :func:`compute_volume_segm` function can be used to compute the volume of each structure in the
+segmentation mask:
+    >>> volume_dict = compute_volume_segm(segm_pred, key_maps, spacing=(0.6, 0.6, 0.6))
+
+Module functions
+----------------
+"""
+
 import torch
 from pathlib import Path
 from typing import Optional, Union

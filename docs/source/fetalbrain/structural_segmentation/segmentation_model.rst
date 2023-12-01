@@ -1,4 +1,4 @@
-segmentation network module
+Segmentation network module
 =======================================================
 
 .. automodule:: fetalbrain.structural_segmentation.segmentation_model

@@ -1,4 +1,4 @@
-fBAN network module
+Alignment Network module
 =============================
 
 .. automodule:: fetalbrain.alignment.fBAN_v1

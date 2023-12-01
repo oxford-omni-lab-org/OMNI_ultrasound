@@ -1,8 +1,13 @@
 """
 This module contains the architecture of the alignment model fBAN_v1 that aligns the input scan
 to a reference coordinate system. The rotations in this model are represented by quaternions.
+The model consists of predicting coarse and fine alignment parameters after each other.
 
-Copied from cluster: **../../../shared/stru0039/fBAN/v1/mode.py**
+More details about the architecture can be found in the NeuroImage paper
+(`Moser et al. NeuroImage, 2022) <https://www.sciencedirect.com/science/article/pii/S1053811922004608>`_).
+
+[Local] Network code copied from the OMNI cluster: **../../../shared/stru0039/fBAN/v1/model.py**
+
 """
 import torch
 import torch.nn as nn
@@ -14,20 +19,26 @@ from .kelluwen_transforms import (
 )
 
 
-class AlignModel(nn.Module):
+class AlignmentModel(nn.Module):
+    """Model class for the alignment model fBAN which predicts the alignment
+    parameters for a given scan.
+
+    Args:
+        shape_data: the input shape of the image
+        dimensions_hidden: the dimensions of the hidden layers in the network
+        size_kernel: convolutional kernel size, defaults to 3
+
+    :Example:
+        >>> model = AlignmentModel()
+    """
+
     def __init__(
         self,
         shape_data: list[int] = [1, 160, 160, 160],
         dimensions_hidden: list[int] = [16, 32, 64, 128, 256, 128, 64, 32],
         size_kernel: int = 3,
     ) -> None:
-        """ Model class for the alignment model fBAN that includes the architecture of the model and the forward pass.
-
-        :param shape_data: the input shape of the image
-        :param dimensions_hidden: the dimensions of the hidden layers in the network
-        :param size_kernel: convolutional kernel size, defaults to 3
-        """
-        super(AlignModel, self).__init__()
+        super(AlignmentModel, self).__init__()
 
         # Rename for readability
         dh = dimensions_hidden
@@ -68,11 +79,22 @@ class AlignModel(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """forward pass of the model
+        """Forward pass of the alignment model
 
-        :param x: batch of data of size [B, C, H, W, D]
-        :return: tuple of of size 3 containing the translation [B, 3], rotation [B, 4] and scaling [B, 3] parameters
+        Args:
+            x: batch of data of size [B, 1, H, W, D] with pixel values between 0 and 1
+
+        Returns:
+            translation: translation parameters of size [B, 3] between 0 and 1
+            rotation: rotation parameters of size [B, 4], represented as quarternions
+            scaling: scaling parameters of size [B, 3] between 0 and 1
+
+        :Example:
+            >>> model = AlignmentModel()
+            >>> dummy_scan = torch.rand(1,1,160,160,160)
+            >>> translation, rotation, scaling = model(dummy_scan)
         """
+
         # Model X1
         hidden = self.enc_X1_cb00(x)
         hidden = self.enc_X1_cb01(self.maxpool(hidden))

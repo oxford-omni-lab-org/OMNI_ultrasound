@@ -1,4 +1,4 @@
-Kelluwen Transforms module
+Kelluwen transforms module
 =========================================
 
 .. automodule:: fetalbrain.alignment.kelluwen_transforms

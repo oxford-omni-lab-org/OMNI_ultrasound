@@ -26,7 +26,7 @@ class WholeDiffeoUnit(nn.Module):
         self.viscous = 1
         self.act = 1
         self.features = 6
-        self.dropout = 1
+        self.dropout = True
         self.net_depth = 4
         self.dec_depth = 1
         self.inshape = [160, 160, 160]
