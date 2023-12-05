@@ -1,0 +1,484 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Subcortical Segmentation" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="fetalbrain/structural_segmentation/subcortical_segm.html" />
+<meta property="og:site_name" content="FetalBrain" />
+<meta property="og:description" content="This module contains the main functions for performing subcortical segmentations on unscaled aligned scans. As post-processing step, only the largest connected component of each class is kept by de..." />
+<meta property="og:image:width" content="1146" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image" content="/_images/social_previews/summary_fetalbrain_structural_segmentation_subcortical_segm_5b55bc74.png" />
+<meta property="og:image:alt" content="This module contains the main functions for performing subcortical segmentations on unscaled aligned scans. As post-processing step, only the largest connect..." />
+<meta name="description" content="This module contains the main functions for performing subcortical segmentations on unscaled aligned scans. As post-processing step, only the largest connected component of each class is kept by de..." />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Segmentation network module" href="segmentation_model.html" /><link rel="prev" title="Subcortical segmentation package" href="index.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
+        <title>Subcortical Segmentation - FetalBrain 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">FetalBrain 0.1 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  
+  <span class="sidebar-brand-text">FetalBrain 0.1 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Getting started</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../index.html">FetalBrain package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of FetalBrain package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../alignment/index.html">Alignment Package</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Alignment Package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../alignment/align.html">Alignment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../alignment/fBAN_v1.html">Alignment Network module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../alignment/kelluwen_transforms.html">Kelluwen transforms module</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="index.html">Subcortical segmentation package</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Subcortical segmentation package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Subcortical Segmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="segmentation_model.html">Segmentation network module</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../tedsnet_multi/index.html">fetalbrain.tedsnet_multi package</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of fetalbrain.tedsnet_multi package</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tedsnet_multi/hemisphere_detector.html">fetalbrain.tedsnet_multi.hemisphere_detector module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../tedsnet_multi/teds_multi_segm.html">fetalbrain.tedsnet_multi.teds_multi_segm module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../utils.html">Utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/lindehesse/OMNI_ultrasound">GitHub repository</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="module-fetalbrain.structural_segmentation.subcortical_segm">
+<span id="subcortical-segmentation"></span><h1>Subcortical Segmentation<a class="headerlink" href="#module-fetalbrain.structural_segmentation.subcortical_segm" title="Link to this heading">#</a></h1>
+<p>This module contains the main functions for performing subcortical segmentations on unscaled aligned scans.
+As post-processing step, only the largest connected component of each class is kept by default. Doing
+this post-processing step can be disabled by setting the connected_component argument to False.</p>
+<p>A single scan can be segmented using the <a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_scan_subc" title="fetalbrain.structural_segmentation.subcortical_segm.segment_scan_subc"><code class="xref py py-func docutils literal notranslate"><span class="pre">segment_scan_subc()</span></code></a> function, which is a wrapper that loads
+the segmentation model, prepares the scan for segmentation and predicts the segmentation mask.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">segm_pred_np</span><span class="p">,</span> <span class="n">key_maps</span> <span class="o">=</span> <span class="n">segment_scan_subc</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">,</span> <span class="n">connected_component</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As for the alignment, it is recommended to use the functions <a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.load_segmentation_model" title="fetalbrain.structural_segmentation.subcortical_segm.load_segmentation_model"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_segmentation_model()</span></code></a>,
+<a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.prepare_scan_segm" title="fetalbrain.structural_segmentation.subcortical_segm.prepare_scan_segm"><code class="xref py py-func docutils literal notranslate"><span class="pre">prepare_scan_segm()</span></code></a>, and <a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical" title="fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical"><code class="xref py py-func docutils literal notranslate"><span class="pre">segment_subcortical()</span></code></a> directly to have more control over the
+workflow. This can for example be used as follows:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">segm_model</span> <span class="o">=</span> <span class="n">load_segmentation_model</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan_prep</span> <span class="o">=</span> <span class="n">prepare_scan_segm</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">segm_pred</span><span class="p">,</span> <span class="n">key_maps</span> <span class="o">=</span> <span class="n">segment_subcortical</span><span class="p">(</span><span class="n">aligned_scan_prep</span><span class="p">,</span> <span class="n">segm_model</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">segm_pred_cc</span> <span class="o">=</span> <span class="n">keep_largest_compoment</span><span class="p">(</span><span class="n">segm_pred</span><span class="o">.</span><span class="n">cpu</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical" title="fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical"><code class="xref py py-func docutils literal notranslate"><span class="pre">segment_subcortical()</span></code></a> function can also process batches of data (i.e. multiple scans at once),
+which can be useful to speed up analysis. More advanced examples can be found in the Example Gallery.</p>
+<p>Lastly, the <a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.compute_volume_segm" title="fetalbrain.structural_segmentation.subcortical_segm.compute_volume_segm"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_volume_segm()</span></code></a> function can be used to compute the volume of each structure in the
+segmentation mask:
+[todo; fix this line] volume_dict = compute_volume_segm(segm_pred, key_maps, spacing=(0.6, 0.6, 0.6))</p>
+<section id="module-functions">
+<h2>Module functions<a class="headerlink" href="#module-functions" title="Link to this heading">#</a></h2>
+</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="fetalbrain.structural_segmentation.subcortical_segm.compute_volume_segm">
+<span class="sig-prename descclassname"><span class="pre">fetalbrain.structural_segmentation.subcortical_segm.</span></span><span class="sig-name descname"><span class="pre">compute_volume_segm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">segm_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_maps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/fetalbrain/structural_segmentation/subcortical_segm.html#compute_volume_segm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.structural_segmentation.subcortical_segm.compute_volume_segm" title="Link to this definition">#</a></dt>
+<dd><p>Get the volume of each structure in a segmentation map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>segm_map</strong> – the segmentation map of size [B, H, W, D] or [H,W,D] with values corresponding
+to the keys/values in key_maps.</p></li>
+<li><p><strong>key_maps</strong> – dictionary with the classes as keys, and the integer value in segm_map as value: {class: value}</p></li>
+<li><p><strong>spacing</strong> – the spacing of the image in mm, should be a tuple of size 3: (x, y, z)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>volume_dict</strong> – dictionary with all classes as keys, and a list of the volume of each structure in cm^3 as value.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">segm_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">key_maps</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ChP&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;LPVH&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;CSPV&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;CB&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spacing</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">volume_dict</span> <span class="o">=</span> <span class="n">compute_volume_segm</span><span class="p">(</span><span class="n">segm_map</span><span class="p">,</span> <span class="n">key_maps</span><span class="p">,</span> <span class="n">spacing</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fetalbrain.structural_segmentation.subcortical_segm.keep_largest_compoment">
+<span class="sig-prename descclassname"><span class="pre">fetalbrain.structural_segmentation.subcortical_segm.</span></span><span class="sig-name descname"><span class="pre">keep_largest_compoment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">segm_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../../_modules/fetalbrain/structural_segmentation/subcortical_segm.html#keep_largest_compoment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.structural_segmentation.subcortical_segm.keep_largest_compoment" title="Link to this definition">#</a></dt>
+<dd><p>Only keeps the largest connected component for each class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>segm_map</strong> – input segmentation map of size [B, H, W, D] or [H, W, D] with integers values
+corresponding to a class</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>conn_comp_segm</strong> – segmentation map of size [B, H, W, D] or [H, W, D] with for each class
+only the largest connected component is kept. The batch dimension is included only if it
+is larger than 1.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">segm_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">conn_comp_segm</span> <span class="o">=</span> <span class="n">keep_largest_compoment</span><span class="p">(</span><span class="n">segm_map</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fetalbrain.structural_segmentation.subcortical_segm.load_segmentation_model">
+<span class="sig-prename descclassname"><span class="pre">fetalbrain.structural_segmentation.subcortical_segm.</span></span><span class="sig-name descname"><span class="pre">load_segmentation_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataParallel</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="segmentation_model.html#fetalbrain.structural_segmentation.segmentation_model.UNet" title="fetalbrain.structural_segmentation.segmentation_model.UNet"><span class="pre">UNet</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/fetalbrain/structural_segmentation/subcortical_segm.html#load_segmentation_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.structural_segmentation.subcortical_segm.load_segmentation_model" title="Link to this definition">#</a></dt>
+<dd><p>Load the trained segmentation model
+:param model_path: path to the trained model. Defaults to None (uses the default model).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> – segmentation model with trained weights loaded</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">load_segmentation_model</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fetalbrain.structural_segmentation.subcortical_segm.prepare_scan_segm">
+<span class="sig-prename descclassname"><span class="pre">fetalbrain.structural_segmentation.subcortical_segm.</span></span><span class="sig-name descname"><span class="pre">prepare_scan_segm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../../_modules/fetalbrain/structural_segmentation/subcortical_segm.html#prepare_scan_segm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.structural_segmentation.subcortical_segm.prepare_scan_segm" title="Link to this definition">#</a></dt>
+<dd><p>prepares the scan for subcortical segmentation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>image</strong> – numpy array or tensor of size
+[B, C, H, W, D], or [B, H, W, D], or [H, W, D]</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tensor of size [B, C, H, W, D] with values between 0 and 255</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">prepare_scan_segm</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">prepare_scan_segm</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fetalbrain.structural_segmentation.subcortical_segm.segment_scan_subc">
+<span class="sig-prename descclassname"><span class="pre">fetalbrain.structural_segmentation.subcortical_segm.</span></span><span class="sig-name descname"><span class="pre">segment_scan_subc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aligned_scan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connected_component</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/fetalbrain/structural_segmentation/subcortical_segm.html#segment_scan_subc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_scan_subc" title="Link to this definition">#</a></dt>
+<dd><p>full function to segment a single scan or a batch of scans</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aligned_scan</strong> – input array or tensor to segment, can be of size [B,H,W,D], [B,C,H,W,D] or [H,W,D]</p></li>
+<li><p><strong>connected_component</strong> – whether to only keep the largest connected component. Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>segm_pred_np</strong> – segmentation map of size [B, H, W, D] or [H, W, D] with a multi-class segmentation.
+The batch dimension is only kepf it is larger than 1.</p></li>
+<li><p><strong>key_maps</strong> – dictionary with the classes as keys, and the integer value in segm_map as value:
+{class: value}</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">segm_pred_np</span><span class="p">,</span> <span class="n">key_maps</span> <span class="o">=</span> <span class="n">segment_scan_subc</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical">
+<span class="sig-prename descclassname"><span class="pre">fetalbrain.structural_segmentation.subcortical_segm.</span></span><span class="sig-name descname"><span class="pre">segment_subcortical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aligned_scan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segm_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataParallel</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="segmentation_model.html#fetalbrain.structural_segmentation.segmentation_model.UNet" title="fetalbrain.structural_segmentation.segmentation_model.UNet"><span class="pre">UNet</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/fetalbrain/structural_segmentation/subcortical_segm.html#segment_subcortical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical" title="Link to this definition">#</a></dt>
+<dd><p>Generate subcortical predictions for a given aligned scan using the provided segmentation model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aligned_scan</strong> – torch tensor containing the aligned image(s) to segment. Should be of size [B, 1, H, W, D].
+Expected input orientation is equal to the output of the align_to_atlas(scale = False) function.</p></li>
+<li><p><strong>segm_model</strong> – a loaded segmentation model, can be obtained using the load_segmentation_model() function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>segm_map</strong> – multiclass segmentation map of size [B, H, W, D] with values between 0 and 4. The values
+correspond to the following classes: 0 = background, 1 = choroid plexus (ChP), 2 = lateral posterior
+ventricle horn (LPVH), 3 = cavum septum pellucidum et vergae (CSPV), 4 = cerebellum (CB).</p></li>
+<li><p><strong>key_maps</strong> – dictionary containing the mapping between the class values and the class names.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan_prep</span> <span class="o">=</span> <span class="n">prepare_scan_segm</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">segm_model</span> <span class="o">=</span> <span class="n">load_segmentation_model</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">segm_map</span><span class="p">,</span> <span class="n">key_maps</span> <span class="o">=</span> <span class="n">segment_subcortical</span><span class="p">(</span><span class="n">aligned_scan_prep</span><span class="p">,</span> <span class="n">segm_model</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">segm_map</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="segmentation_model.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Segmentation network module</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Subcortical segmentation package</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023, L.S. Hesse
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Subcortical Segmentation</a><ul>
+<li><a class="reference internal" href="#module-functions">Module functions</a></li>
+<li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.compute_volume_segm"><code class="docutils literal notranslate"><span class="pre">compute_volume_segm()</span></code></a></li>
+<li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.keep_largest_compoment"><code class="docutils literal notranslate"><span class="pre">keep_largest_compoment()</span></code></a></li>
+<li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.load_segmentation_model"><code class="docutils literal notranslate"><span class="pre">load_segmentation_model()</span></code></a></li>
+<li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.prepare_scan_segm"><code class="docutils literal notranslate"><span class="pre">prepare_scan_segm()</span></code></a></li>
+<li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_scan_subc"><code class="docutils literal notranslate"><span class="pre">segment_scan_subc()</span></code></a></li>
+<li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical"><code class="docutils literal notranslate"><span class="pre">segment_subcortical()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
+    </body>
+</html>
