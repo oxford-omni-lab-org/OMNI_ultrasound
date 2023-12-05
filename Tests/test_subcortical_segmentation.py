@@ -13,8 +13,8 @@ from fetalbrain.alignment.align import load_alignment_model, align_to_atlas, pre
 
 #doctest.testmod()
 
-TEST_IMAGE_PATH = Path("src/fetalbrain/alignment/test_data/06-5010_152days_0356.mha")
-REF_SEGMAP_PATH = Path("src/fetalbrain/structural_segmentation/testdata/segmentation_ref.nii.gz")
+TEST_IMAGE_PATH = Path("Tests/testdata/alignment/06-5010_152days_0356.mha")
+REF_SEGMAP_PATH = Path("Tests/testdata/subcortical_segm/segmentation_ref.nii.gz")
 
 
 def test_load_segmentation_model() -> None:

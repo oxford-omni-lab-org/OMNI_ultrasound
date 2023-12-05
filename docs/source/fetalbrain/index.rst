@@ -9,6 +9,7 @@ Subpackages
 
    alignment/index
    structural_segmentation/index
+   tedsnet_multi/index
    
 
 Submodules

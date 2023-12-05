@@ -6,7 +6,7 @@ from fetalbrain.utils import read_image, plot_planes_segm
 from fetalbrain.alignment.align import align_scan
 from fetalbrain.tedsnet_multi.teds_multi_segm import get_prior_shape_sa, segment_scan_tedsall, load_tedsmulti_model
 
-TEST_IMAGE_PATH = Path("src/fetalbrain/alignment/test_data/06-5010_152days_0356.mha")
+TEST_IMAGE_PATH = Path("Tests/testdata/alignment/06-5010_152days_0356.mha")
 
 
 def test_load_tedsmulti_model(model_path: Optional[Path] = None) -> None:

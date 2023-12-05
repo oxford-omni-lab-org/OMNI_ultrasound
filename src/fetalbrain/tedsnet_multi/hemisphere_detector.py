@@ -2,11 +2,10 @@ import torch
 from pathlib import Path
 from typing import Optional
 import numpy as np
-
+from ..model_paths import SIDE_DETECTOR_MODEL_PATH
 # from fetalbrain.alignment.align import _get_transform_to_atlasspace
 
 
-SIDE_DETECTOR_MODEL_PATH = Path("src/fetalbrain/tedsnet_multi/network/FinalModel_sidedetection.pt")
 
 
 def load_sidedetector_model(model_path: Optional[Path] = None) -> torch.nn.Module:

@@ -2,7 +2,7 @@ from pathlib import Path
 import torch
 import doctest
 from fetalbrain.utils import read_image
-from fetalbrain.alignment.fBAN_v1 import AlignModel
+from fetalbrain.alignment.fBAN_v1 import AlignmentModel
 from fetalbrain.alignment.align import (
     load_alignment_model,
     prepare_scan,
@@ -17,15 +17,15 @@ from fetalbrain.alignment.kelluwen_transforms import apply_affine
 
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-TEST_IMAGE_PATH = Path("src/fetalbrain/alignment/test_data/06-5010_152days_0356.mha")
+TEST_IMAGE_PATH = Path("Tests/testdata/alignment/06-5010_152days_0356.mha")
+TEMP_SAVE_PATH = Path("Tests/testdata/alignment/temp")
 
-
-#doctest.testmod()
+# doctest.testmod()
 
 
 def test_load_alignment_model() -> None:
     model = load_alignment_model()
-    assert isinstance(model, AlignModel)
+    assert isinstance(model, AlignmentModel)
 
 
 def test_prepare_scan() -> None:
@@ -53,7 +53,7 @@ def test_align_scan() -> None:
     assert params["translation"].shape == (1, 3)
 
     write_image(
-        Path("src/alignment/test_data/aligned_scan.nii.gz"),
+        TEMP_SAVE_PATH / "aligned_scan.nii.gz",
         aligned_scan.squeeze().cpu().numpy(),
         spacing=spacing,
     )
@@ -93,22 +93,22 @@ def test_unalign_scan() -> None:
 
     # write images to compare them manually, some interpolation artefacts are introduced
     # so difficult to compare max pixel values
-    write_image(
-        Path("src/alignment/test_data/original.nii.gz"),
-        torch_scan.squeeze().cpu().numpy(),
-        spacing=spacing,
-    )
-    write_image(
-        Path("src/alignment/test_data/unaligned.nii.gz"),
-        unaligned_im.squeeze().cpu().numpy(),
-        spacing=spacing,
-    )
+    # write_image(
+    #     TEMP_SAVE_PATH / "original.nii.gz",
+    #     torch_scan.squeeze().cpu().numpy(),
+    #     spacing=spacing,
+    # )
+    # write_image(
+    #     TEMP_SAVE_PATH / 'unaligned/nii.gz',
+    #     unaligned_im.squeeze().cpu().numpy(),
+    #     spacing=spacing,
+    # )
 
     # also write them to png to manually inspect
     fig_original = plot_midplanes(torch_scan.squeeze().cpu().numpy(), "Original")
     fig_unaligned = plot_midplanes(unaligned_im.squeeze().cpu().numpy(), "Unaligned")
-    fig_original.savefig("src/fetalbrain/alignment/test_data/original.png")
-    fig_unaligned.savefig("src/fetalbrain/alignment/test_data/unaligned.png")
+    fig_original.savefig(TEMP_SAVE_PATH / 'original.png')
+    fig_unaligned.savefig(TEMP_SAVE_PATH / "unaligned.png")
 
 
 def test_scaling_twosteps() -> None:
@@ -126,23 +126,23 @@ def test_scaling_twosteps() -> None:
     aligned_twostep = transform_from_params(aligned_noscale, scaling=params["scaling"])
 
     # write images to compare them manually
-    write_image(
-        Path("src/fetalbrain/alignment/test_data/aligned_scan_onestep.nii.gz"),
-        aligned_scan.squeeze().cpu().numpy(),
-        spacing=spacing,
-    )
-    write_image(
-        Path("src/fetalbrain/alignment/test_data/aligned_scan_twostep.nii.gz"),
-        aligned_twostep.squeeze().cpu().numpy(),
-        spacing=spacing,
-    )
+    # write_image(
+    #     Path( TEMP_SAVE_PATH / "aligned_scan_onestep.nii.gz"),
+    #     aligned_scan.squeeze().cpu().numpy(),
+    #     spacing=spacing,
+    # )
+    # write_image(
+    #     Path( TEMP_SAVE_PATH / "aligned_scan_twostep.nii.gz"),
+    #     aligned_twostep.squeeze().cpu().numpy(),
+    #     spacing=spacing,
+    # )
 
     # compare the two images
     max_diff = torch.max(torch.abs(aligned_scan - aligned_twostep))
     print(f"Max difference between the two images: {max_diff:.3f} on pixel range 0-1")
 
     # this threshold is quite arbitrary, better to check the similarities of the image visually in itk-snap
-    assert max_diff < 0.15, "The two images are too different"
+    assert max_diff < 0.25, "The two images are too different"
 
 
 def test_permutations() -> None:

@@ -36,15 +36,9 @@ import numpy as np
 from typeguard import typechecked
 import SimpleITK as sitk
 from .segmentation_model import UNet
+from ..model_paths import SEGM_MODEL_PATH
 
-SEGM_MODEL_PATH = (
-    Path("/mnt/data/Projects_Results/subcortical_segmentation/")
-    / "Final_Experiments2"
-    / "Results"
-    / "03_11_2021_26_SingleVolumesAligned_20training"
-    / "run_0"
-    / "modelcheckpoint_epoch_999_loss0.042063.tar"
-)
+
 
 
 def load_segmentation_model(model_path: Optional[Path] = None) -> torch.nn.DataParallel[UNet]:

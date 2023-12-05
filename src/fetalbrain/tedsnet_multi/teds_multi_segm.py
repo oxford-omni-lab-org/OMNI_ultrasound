@@ -9,9 +9,9 @@ from fetalbrain.tedsnet_multi.network.TEDS_Net import TEDS_Net
 from fetalbrain.structural_segmentation.subcortical_segm import prepare_scan_segm
 from fetalbrain.utils import read_image
 from fetalbrain.tedsnet_multi.hemisphere_detector import load_sidedetector_model, detect_side
+from ..model_paths import TEDS_MULTI_MODEL_PATH, PRIOR_SHAPE_PATH
 
-TEDS_MULTI_MODEL_PATH = Path("src/fetalbrain/tedsnet_multi/network/finalmodel.pt")
-PRIOR_SHAPE_PATH = Path("src/fetalbrain/tedsnet_multi/26wks_AllLabels.mha")
+
 
 
 def load_tedsmulti_model(model_path: Optional[Path] = None) -> TEDS_Net:

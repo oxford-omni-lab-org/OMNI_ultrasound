@@ -5,10 +5,10 @@ import doctest
 from fetalbrain.utils import _read_mha_image, _read_nii_image, read_image, write_image, plot_midplanes
 
 
-TEST_IMAGE_PATH_MHA = Path("test_data/09-8515_187days_1049.mha")
-TEST_IMAGE_PATH_INVALID = Path("test_data/09-8515_187days_1049.lb")
-TEST_SAVEPATH_MHA = Path("test_data/new_09-8515_187days_1049.mha")
-TEST_SAVEPATH_NII = Path("test_data/new_09-8515_187days_1049.nii.gz")
+TEST_IMAGE_PATH_MHA = Path("Tests/testdata/readio/09-8515_187days_1049.mha")
+TEST_IMAGE_PATH_INVALID = Path("Tests/testdata/readio/09-8515_187days_1049.lb")
+TEST_SAVEPATH_MHA = Path("Tests/testdata/readio/new_09-8515_187days_1049.mha")
+TEST_SAVEPATH_NII = Path("Tests/testdata/readio/new_09-8515_187days_1049.nii.gz")
 
 #doctest.testmod()
 

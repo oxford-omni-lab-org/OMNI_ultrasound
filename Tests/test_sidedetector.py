@@ -4,7 +4,7 @@ from fetalbrain.utils import read_image
 from fetalbrain.tedsnet_multi.hemisphere_detector import load_sidedetector_model, detect_side
 from fetalbrain.alignment.align import align_scan
 
-TEST_IMAGE_PATH = Path("src/fetalbrain/alignment/test_data/06-5010_152days_0356.mha")
+TEST_IMAGE_PATH = Path("Tests/testdata/alignment/06-5010_152days_0356.mha")
 
 
 def test_load_sidedetector_model() -> None:

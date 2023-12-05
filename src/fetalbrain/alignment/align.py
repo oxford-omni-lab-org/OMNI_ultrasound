@@ -32,8 +32,9 @@ from typing import Optional, Union, overload, Literal
 from typeguard import typechecked
 from .kelluwen_transforms import generate_affine, apply_affine
 from .fBAN_v1 import AlignmentModel
+from ..model_paths import BAN_MODEL_PATH
 
-BAN_MODEL_PATH = Path("src/fetalbrain/alignment/config/model_weights.pt")
+
 BEAN_TO_ATLAS = Path("src/fetalbrain/alignment/config/25wks_Atlas(separateHems)_mean_warped.json")
 
 
