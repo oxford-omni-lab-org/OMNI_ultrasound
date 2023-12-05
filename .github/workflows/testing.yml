@@ -23,4 +23,5 @@ jobs:
       - name: Install and Test
         run: |
           pip install .[all]
+          export PYTHONPATH=$PYTHONPATH:${GITHUB_WORKSPACE}/src
           pytest Tests/test_test.py
