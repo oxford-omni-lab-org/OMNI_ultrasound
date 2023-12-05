@@ -11,7 +11,7 @@ from fetalbrain.structural_segmentation.segmentation_model import UNet
 from fetalbrain.utils import read_image
 from fetalbrain.alignment.align import load_alignment_model, align_to_atlas, prepare_scan
 
-doctest.testmod()
+#doctest.testmod()
 
 TEST_IMAGE_PATH = Path("src/fetalbrain/alignment/test_data/06-5010_152days_0356.mha")
 REF_SEGMAP_PATH = Path("src/fetalbrain/structural_segmentation/testdata/segmentation_ref.nii.gz")

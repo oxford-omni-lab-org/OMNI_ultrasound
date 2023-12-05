@@ -23,7 +23,3 @@ allstructure_segm, keymaps = segment_scan_tedsall(aligned_scan)
 write_image(Path("src/fetalbrain/alignment/test_data/aligned_scan.nii.gz"), aligned_scan.squeeze().numpy() * 255)
 write_image(Path("src/fetalbrain/alignment/test_data/subcortical_segm.nii.gz"), subc_segm.squeeze())
 write_image(Path("src/fetalbrain/alignment/test_data/allstructure_segm.nii.gz"), allstructure_segm.squeeze())
-
-
-
-

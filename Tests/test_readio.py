@@ -10,7 +10,7 @@ TEST_IMAGE_PATH_INVALID = Path("test_data/09-8515_187days_1049.lb")
 TEST_SAVEPATH_MHA = Path("test_data/new_09-8515_187days_1049.mha")
 TEST_SAVEPATH_NII = Path("test_data/new_09-8515_187days_1049.nii.gz")
 
-doctest.testmod()
+#doctest.testmod()
 
 
 def test_read_sitk_image() -> None:

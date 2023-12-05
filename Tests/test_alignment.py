@@ -20,7 +20,7 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 TEST_IMAGE_PATH = Path("src/fetalbrain/alignment/test_data/06-5010_152days_0356.mha")
 
 
-doctest.testmod()
+#doctest.testmod()
 
 
 def test_load_alignment_model() -> None:

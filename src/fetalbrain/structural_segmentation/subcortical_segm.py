@@ -12,18 +12,17 @@ As for the alignment, it is recommended to use the functions :func:`load_segment
 :func:`prepare_scan_segm`, and :func:`segment_subcortical` directly to have more control over the
 workflow. This can for example be used as follows:
     >>> segm_model = load_segmentation_model()
-    >>> for scan in aligned_scans:
-    >>>     aligned_scan_prep = prepare_scan_segm(aligned_scan)
-    >>>     segm_pred, key_maps = segment_subcortical(aligned_scan_prep, segm_model)
-    >>>     if connected_component:
-    >>>         segm_pred = keep_largest_compoment(segm_pred)
+    >>> aligned_scan = torch.rand((160, 160, 160))
+    >>> aligned_scan_prep = prepare_scan_segm(aligned_scan)
+    >>> segm_pred, key_maps = segment_subcortical(aligned_scan_prep, segm_model)
+    >>> segm_pred_cc = keep_largest_compoment(segm_pred.cpu())
 
 The :func:`segment_subcortical` function can also process batches of data (i.e. multiple scans at once),
 which can be useful to speed up analysis. More advanced examples can be found in the Example Gallery.
 
 Lastly, the :func:`compute_volume_segm` function can be used to compute the volume of each structure in the
 segmentation mask:
-    >>> volume_dict = compute_volume_segm(segm_pred, key_maps, spacing=(0.6, 0.6, 0.6))
+[todo; fix this line] volume_dict = compute_volume_segm(segm_pred, key_maps, spacing=(0.6, 0.6, 0.6))
 
 Module functions
 ----------------

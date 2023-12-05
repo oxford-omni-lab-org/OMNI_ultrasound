@@ -234,6 +234,7 @@ def plot_planes_segm(image: np.ndarray, segmentation: np.ndarray, title: Optiona
     max_color = np.max(segmentation)
 
     midplanes = [70, 80, 90]
+    midplanes = [80, 80, 80]
     fig, axes = plt.subplots(1, 3, figsize=(15, 6))
     axes[0].imshow(image[midplanes[0], :, :], cmap="gray")
     axes[0].imshow(
