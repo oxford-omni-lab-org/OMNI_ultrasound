@@ -16,6 +16,7 @@ docs/build/
 
 *.mha 
 *.png 
+!docs/**/*.png
 *.nii 
 *.nii.gz 
 
