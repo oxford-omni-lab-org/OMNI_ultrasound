@@ -10,7 +10,7 @@ __pycache__/
 
 BEAN
 Original_Codes
-
+Old_Code
 
 docs/build/
 
@@ -25,8 +25,11 @@ docs/build/
 *.nii 
 *.nii.gz 
 
+!Tests/testdata/*.nii.gz
+
 # model weights + config (might want to change this at some point to include them)
 *.json
+!config/*.json
 
 build
 fetalbrain.egg-info

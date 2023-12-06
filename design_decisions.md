@@ -46,3 +46,10 @@ pip install light-the-torch && ltt install torch
 
 # install package
 pip install -e .[dev,plot]
+
+
+# for large files install lfs (apple)
+https://git-lfs.com/
+
+brew install git-lfs
+git lfs install
