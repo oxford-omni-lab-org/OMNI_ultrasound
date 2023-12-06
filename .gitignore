@@ -10,19 +10,25 @@ __pycache__/
 
 BEAN
 Original_Codes
-model_weights
+
 
 docs/build/
 
 *.mha 
+
+# this is the teds prior shape
+!26wks_AllLabels.mha 
+
+
 *.png 
 !docs/**/*.png
 *.nii 
 *.nii.gz 
 
 # model weights + config (might want to change this at some point to include them)
-*.pt
 *.json
 
 build
 fetalbrain.egg-info
+
+**/.DS_Store

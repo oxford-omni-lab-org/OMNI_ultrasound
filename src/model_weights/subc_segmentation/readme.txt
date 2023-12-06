@@ -1,0 +1,1 @@
+copied over from Lindes local path: /mnt/data/Projects_Results/subcortical_segmentation/Final_Experiments2/Results/03_11_2021_26_SingleVolumesAligned_20training/run_0/modelcheckpoint_epoch_999_loss0.042063.tar
