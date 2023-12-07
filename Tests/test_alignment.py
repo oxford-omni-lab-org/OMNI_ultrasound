@@ -15,9 +15,8 @@ from fetalbrain.alignment.align import (
 from fetalbrain.utils import write_image, plot_midplanes
 from fetalbrain.alignment.kelluwen_transforms import apply_affine
 
-
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-TEST_IMAGE_PATH = Path("Tests/testdata/alignment/06-5010_152days_0356.mha")
+TEST_IMAGE_PATH = Path("Tests/testdata/example_image.nii.gz")
 TEMP_SAVE_PATH = Path("Tests/testdata/alignment/temp")
 
 # doctest.testmod()
@@ -167,8 +166,8 @@ def test_permutations() -> None:
     # plot and save, these should look roughly similar (except for differences in stochasticity in network)
     fig_original = plot_midplanes(aligned_np, title="aligned scan")
     fig_permuted = plot_midplanes(aligned_perm_np, title="aligned scan perm")
-    fig_original.savefig("src/fetalbrain/alignment/test_data/aligned_original.png")
-    fig_permuted.savefig("src/fetalbrain/alignment/test_data/aligned_permuted.png")
+    fig_original.savefig(TEMP_SAVE_PATH / "aligned_original.png")
+    fig_permuted.savefig(TEMP_SAVE_PATH / "aligned_permuted.png")
 
 
 def test_align_to_atlas() -> None:
@@ -192,8 +191,8 @@ def test_align_to_atlas() -> None:
     fig_2step = plot_midplanes(aligned_atlas.squeeze().cpu().numpy(), title="aligned atlas")
     fig_direct = plot_midplanes(aligned_atlas_direct.squeeze().cpu().numpy(), title="aligned atlas direct")
 
-    fig_2step.savefig("src/fetalbrain/alignment/test_data/align_to_atlas_2step.png")
-    fig_direct.savefig("src/fetalbrain/alignment/test_data/align_to_atlas_1step.png")
+    fig_2step.savefig(TEMP_SAVE_PATH / "align_to_atlas_2step.png")
+    fig_direct.savefig(TEMP_SAVE_PATH / "align_to_atlas_1step.png")
 
 
 def test_align_to_atlas_direct() -> None:
