@@ -27,4 +27,5 @@ jobs:
           pip install .[all]
           export PYTHONPATH=$PYTHONPATH:${GITHUB_WORKSPACE}/src
           pytest Tests/test_alignment.py
+          pytest Tests/test_readio.py
 

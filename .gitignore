@@ -27,6 +27,7 @@ docs/build/
 
 !Tests/testdata/*.nii.gz
 !Tests/testdata/alignment/*.png
+!Tests/testdata/*.mha
 
 # model weights + config (might want to change this at some point to include them)
 *.json

@@ -17,6 +17,7 @@ For writing .nii / .nii.gz / .mha use:
 import numpy as np
 from pathlib import Path
 import SimpleITK as sitk
+import warnings
 from typing import Union
 import nibabel as nib
 from typing import Optional
@@ -44,6 +45,7 @@ def _read_mha_image(
     """
 
     assert vol_path.exists(), f"vol_path does not exist: {vol_path}"
+    assert vol_path.suffix == ".mha", f"vol_path must be a .mha file: {vol_path}"
 
     itk_img = sitk.ReadImage(str(vol_path))
     sitk_array = sitk.GetArrayFromImage(itk_img)
@@ -73,11 +75,12 @@ def _read_nii_image(
         spacing: spacing of the image (optional)
     """
     assert vol_path.exists(), f"vol_path does not exist: {vol_path}"
+    assert vol_path.suffix in [".nii", ".gz"], f"vol_path must be a .nii or .nii.gz file: {vol_path}"
 
     nib_img: nib.Nifti1Image = nib.nifti1.load(vol_path)
 
     # extract the data
-    im_array = nib_img.get_fdata()
+    im_array = np.asarray(nib_img.dataobj)
     if return_info:
         spacing = nib_img.header.get_zooms()
         spacing = tuple([float(s) for s in spacing])
@@ -119,7 +122,7 @@ def read_image(vol_path: Union[Path, str]) -> tuple[np.ndarray, tuple[float, flo
 
 
 def read_matlab_image(vol_path: Union[Path, str]) -> tuple[np.ndarray, tuple[float, float, float]]:
-    """ This function can be used to read the matlab image file from the longitudinal atlas. To use this
+    """This function can be used to read the matlab image file from the longitudinal atlas. To use this
     function the package needs to be install with the [matlab] addition (or this can be manually installed
     with pip install scipy). As there is no spacing information in the matlab files, this is hardcode
     to (0.6, 0.6, 0.6).
@@ -164,16 +167,20 @@ def generate_nii_affine(spacing: tuple[float, float, float]) -> np.ndarray:
     return affine
 
 
-@typechecked
 def write_image(
-    vol_path: Union[Path, str], image_array: np.ndarray, spacing: tuple[float, float, float] = (0.6, 0.6, 0.6)
+    vol_path: Union[Path, str],
+    image_array: np.ndarray,
+    spacing: tuple[float, float, float] = (0.6, 0.6, 0.6),
+    dtype: np.dtype = np.uint8,
 ) -> None:
-    """Saves a numpy array as an nifti or mha image, the type is determined by the file extension
+    """Saves a numpy array as an nifti or mha image, the type is determined by the file extension.
+    The images are written with integer pixel values between 0 and 255
 
     Args:
         vol_path: path to save the images to
         image_array: numpy array with the image data
         spacing: spacing of the pixels, defaults to (0.6, 0.6, 0.6)
+        dtype: dtype of the saved image, defaults to np.uint8
 
     Example:
         >>> test_image =  np.random.rand(160, 160, 160)
@@ -182,6 +189,13 @@ def write_image(
 
     if isinstance(vol_path, str):
         vol_path = Path(vol_path)
+
+    if np.max(image_array) <= 1:
+        warnings.warn(
+            "Image array has values between 0 and 1, expects pixel values between 0 and 255\
+                      for image data",
+            UserWarning,
+        )
 
     # check inputs
     assert 2 <= len(image_array.shape) <= 5, "im_array must be 2D-4D"
@@ -193,7 +207,7 @@ def write_image(
 
     if vol_path.suffix == ".mha":
         assert len(image_array.shape) == 3, "mha images only supported for 3D images"
-        sitk_array = np.transpose(image_array, (2, 1, 0)).astype("int16")
+        sitk_array = np.transpose(image_array, (2, 1, 0)).astype(dtype)
         sitk_im = sitk.GetImageFromArray(sitk_array)
 
         # set the spacing
@@ -201,12 +215,13 @@ def write_image(
         sitk_im.SetOrigin((0, 0, 0))
 
         # save the image
-        sitk.WriteImage(sitk_im, str(vol_path))
+        sitk.WriteImage(sitk_im, str(vol_path), useCompression=True)
 
     elif vol_path.suffix in [".nii", ".gz"]:
-        # we are assuming nifti 2 here
+        # we are assuming nifti1 here
         affine = generate_nii_affine(spacing)
-        im = nib.Nifti1Image(image_array, affine=affine.astype("float64"), dtype=np.int16)
+        im = nib.Nifti1Image(image_array.astype(dtype), affine=affine.astype("float64"))
+        im.set_data_dtype(dtype)
 
         # save the image
         nib.save(im, str(vol_path))

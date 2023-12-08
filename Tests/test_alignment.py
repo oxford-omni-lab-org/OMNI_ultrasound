@@ -14,10 +14,7 @@ from fetalbrain.alignment.align import (
     _get_atlastransform_itksnap,
     align_to_atlas,
 )
-
-TEST_IMAGE_PATH = Path("Tests/testdata/example_image.nii.gz")
-TEST_ALIGNMENT_PATH = Path("Tests/testdata/alignment")
-TEMP_SAVE_PATH = TEST_ALIGNMENT_PATH / "temp"
+from path_literals import TEST_IMAGE_PATH, TEST_ALIGNMENT_PATH, TEMP_SAVEPATH
 
 
 def compare_threshold(scan1: torch.Tensor, scan2: torch.Tensor, threshold: float = 1.0) -> float:
@@ -268,10 +265,10 @@ def test_consistency() -> None:
 
     # aligned image
     aligned_scan, params = align_to_atlas(torch_scan, model, scale=False)
-    write_image(TEMP_SAVE_PATH / "aligned.nii.gz", aligned_scan.numpy().squeeze(), spacing=(0.6, 0.6, 0.6))
+    write_image(TEMP_SAVEPATH / "aligned.nii.gz", aligned_scan.numpy().squeeze(), spacing=(0.6, 0.6, 0.6))
 
     # reload and align again
-    example_reloaded, _ = read_image(TEMP_SAVE_PATH / "aligned.nii.gz")
+    example_reloaded, _ = read_image(TEMP_SAVEPATH / "aligned.nii.gz")
     example_reloaded_torch = prepare_scan(example_reloaded)
     aligned_scan_reload, params = align_to_atlas(example_reloaded_torch, model, scale=False)
 
