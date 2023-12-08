@@ -2,7 +2,7 @@ from pathlib import Path
 from fetalbrain.alignment.align import align_scan
 from fetalbrain.utils import read_image, plot_midplanes
 
-TEST_IMAGE_PATH = Path("src/fetalbrain/alignment/test_data/06-5010_152days_0356.mha")
+TEST_IMAGE_PATH = Path("Tests/testdata/example_image.nii.gz")
 image, _ = read_image(TEST_IMAGE_PATH)
 
 # align the scan to the atlas space

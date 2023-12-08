@@ -31,14 +31,11 @@ Module functions
 import torch
 from pathlib import Path
 from typing import Optional, Union
-
 import numpy as np
-from typeguard import typechecked
 import SimpleITK as sitk
 from .segmentation_model import UNet
 from ..model_paths import SEGM_MODEL_PATH
-
-
+from ..alignment.align import prepare_scan
 
 
 def load_segmentation_model(model_path: Optional[Path] = None) -> torch.nn.DataParallel[UNet]:
@@ -68,44 +65,6 @@ def load_segmentation_model(model_path: Optional[Path] = None) -> torch.nn.DataP
     torch.set_grad_enabled(False)
 
     return model
-
-
-@typechecked
-def prepare_scan_segm(image: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
-    """prepares the scan for subcortical segmentation
-
-    Args:
-        image: numpy array or tensor of size
-            [B, C, H, W, D], or [B, H, W, D], or [H, W, D]
-
-    Returns:
-        :tensor of size [B, C, H, W, D] with values between 0 and 255
-
-    Example:
-        >>> image = np.random.random_sample((1, 1, 160, 160, 160))
-        >>> image = prepare_scan_segm(image)
-        >>> assert torch.max(image) > 1
-
-        >>> image = torch.rand((1, 1, 160, 160, 160))
-        >>> image = prepare_scan_segm(image)
-        >>> assert torch.max(image) > 1
-    """
-
-    # convert to torch tensor
-    if isinstance(image, np.ndarray):
-        image = torch.from_numpy(image).float()
-
-    # add channel and batch dimensions
-    if len(image.shape) == 3:
-        image = image.unsqueeze(0).unsqueeze(0)
-    elif len(image.shape) == 4:
-        image = image.unsqueeze(1)
-
-    # scale between 0 and 1
-    if torch.max(image) <= 1:
-        image = image * 255
-
-    return image
 
 
 def segment_subcortical(
@@ -243,7 +202,7 @@ def keep_largest_compoment(segm_map: np.ndarray) -> np.ndarray:
 def segment_scan_subc(
     aligned_scan: Union[torch.Tensor, np.ndarray], connected_component: bool = True
 ) -> tuple[np.ndarray, dict]:
-    """ full function to segment a single scan or a batch of scans
+    """full function to segment a single scan or a batch of scans
 
     Args:
         aligned_scan: input array or tensor to segment, can be of size [B,H,W,D], [B,C,H,W,D] or [H,W,D]
@@ -261,7 +220,7 @@ def segment_scan_subc(
 
     """
     segm_model = load_segmentation_model()
-    aligned_scan_prep = prepare_scan_segm(aligned_scan)
+    aligned_scan_prep = prepare_scan(aligned_scan)
 
     segm_pred, key_maps = segment_subcortical(aligned_scan_prep, segm_model)
     segm_pred_np = segm_pred.cpu().numpy()

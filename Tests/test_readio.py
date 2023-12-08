@@ -1,4 +1,3 @@
-from pathlib import Path
 import numpy as np
 import pytest
 from fetalbrain.utils import _read_mha_image, _read_nii_image, read_image, write_image, plot_midplanes

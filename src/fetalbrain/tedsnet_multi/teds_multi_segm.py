@@ -6,12 +6,10 @@ import numpy as np
 from typing import Optional, Literal
 from pathlib import Path
 from fetalbrain.tedsnet_multi.network.TEDS_Net import TEDS_Net
-from fetalbrain.structural_segmentation.subcortical_segm import prepare_scan_segm
+from fetalbrain.alignment.align import prepare_scan
 from fetalbrain.utils import read_image
 from fetalbrain.tedsnet_multi.hemisphere_detector import load_sidedetector_model, detect_side
 from ..model_paths import TEDS_MULTI_MODEL_PATH, PRIOR_SHAPE_PATH
-
-
 
 
 def load_tedsmulti_model(model_path: Optional[Path] = None) -> TEDS_Net:
@@ -151,7 +149,7 @@ def segment_scan_tedsall(aligned_scan: torch.Tensor) -> tuple[np.ndarray, dict]:
     """
 
     segm_model = load_tedsmulti_model().to(aligned_scan.device)
-    aligned_scan = prepare_scan_segm(aligned_scan)
+    aligned_scan = prepare_scan(aligned_scan)
 
     # side is now hardcode, this has to change into model prediction
     side_model = load_sidedetector_model()

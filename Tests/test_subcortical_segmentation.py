@@ -1,20 +1,13 @@
-import doctest
-import numpy as np
 import torch
-from pathlib import Path
 from fetalbrain.structural_segmentation.subcortical_segm import (
     load_segmentation_model,
-    prepare_scan_segm,
     segment_subcortical,
 )
 from fetalbrain.structural_segmentation.segmentation_model import UNet
 from fetalbrain.utils import read_image
 from fetalbrain.alignment.align import load_alignment_model, align_to_atlas, prepare_scan
-
-#doctest.testmod()
-
-TEST_IMAGE_PATH = Path("Tests/testdata/alignment/06-5010_152days_0356.mha")
-REF_SEGMAP_PATH = Path("Tests/testdata/subcortical_segm/segmentation_ref.nii.gz")
+from path_literals import TEST_IMAGE_PATH, TEST_SEGM_PATH
+import numpy as np
 
 
 def test_load_segmentation_model() -> None:
@@ -25,11 +18,12 @@ def test_load_segmentation_model() -> None:
 
 def test_prepare_scan_segm() -> None:
     example_scan, _ = read_image(TEST_IMAGE_PATH)
-    torch_scan = prepare_scan_segm(example_scan)
+    torch_scan = prepare_scan(example_scan)
     assert torch_scan.shape == (1, 1, 160, 160, 160)
 
     # make sure it is scaled between 0 and 255
     assert torch.max(torch_scan) > 1
+    assert torch.min(torch_scan) >= 0
 
 
 def test_segment_subcortical() -> None:
@@ -43,7 +37,7 @@ def test_segment_subcortical() -> None:
 
     # prepare scan for segmentation
     segm_model = load_segmentation_model()
-    aligned_scan_prep = prepare_scan_segm(aligned_scan)
+    aligned_scan_prep = prepare_scan(aligned_scan)
     multi_class, class_dict = segment_subcortical(aligned_scan_prep, segm_model)
 
     assert multi_class.shape == (1, 160, 160, 160)
@@ -51,6 +45,9 @@ def test_segment_subcortical() -> None:
 
     # compare to a saved reference segmentation for this volume
     multi_class_np = multi_class[0].cpu().numpy()
-    ref_segm, _ = read_image(REF_SEGMAP_PATH)
 
-    assert np.all(multi_class_np == ref_segm)
+    ref_segmpath = TEST_SEGM_PATH / "ref_segmap.nii.gz"
+    ref_segm, _ = read_image(ref_segmpath)
+
+    assert ref_segm.shape == multi_class_np.shape
+    assert np.allclose(ref_segm, multi_class_np, atol=1e-4)

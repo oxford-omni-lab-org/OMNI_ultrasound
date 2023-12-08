@@ -1,4 +1,4 @@
-"""This module contains the main functions for aligning the scans.
+"""This module contains the main functions for aligning the scans.  
 
 A single scan be aligned using the :func:`align_scan` function, which is a wrapper that loads the alignment model,
 prepares the scan into pytorch and computes and applies the alignment transformation. The alignment can be
@@ -64,25 +64,41 @@ def load_alignment_model(model_path: Optional[Path] = None) -> AlignmentModel:
 
 
 @typechecked
-def prepare_scan(image: np.ndarray) -> torch.Tensor:
-    """Prepares the scan to be aligned with the alignment model.
-    Transforms the numpy array to pytorch and adds the batch and channel dimension.
+def prepare_scan(image: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
+    """prepares the scan for subcortical segmentation
 
     Args:
-        image: scan to be transformed
+        image: numpy array or tensor of size
+            [B, C, H, W, D], or [B, H, W, D], or [H, W, D]
+
     Returns:
-        torch_imge: pytorch tensor of the scan
+        :tensor of size [B, C, H, W, D] with values between 0 and 255
 
     Example:
-        >>> dummy_scan = np.random.rand(160, 160, 160)
-        >>> torch_scan = prepare_scan(dummy_scan)
+        >>> image = np.random.random_sample((1, 1, 160, 160, 160))
+        >>> image = prepare_scan_segm(image)
+        >>> assert torch.max(image) > 1
+
+        >>> image = torch.rand((1, 1, 160, 160, 160))
+        >>> image = prepare_scan_segm(image)
+        >>> assert torch.max(image) > 1
     """
 
-    torch_image = torch.from_numpy(image)
-    torch_image = torch_image[None, None, :]
-    torch_image = torch_image.float()
+    # convert to torch tensor
+    if isinstance(image, np.ndarray):
+        image = torch.from_numpy(image).float()
 
-    return torch_image
+    # add channel and batch dimensions
+    if len(image.shape) == 3:
+        image = image.unsqueeze(0).unsqueeze(0)
+    elif len(image.shape) == 4:
+        image = image.unsqueeze(1)
+
+    # scale between 0 and 1
+    if torch.max(image) <= 1:
+        image = image * 255
+
+    return image
 
 
 # Function overload to make mypy recognize different return types
