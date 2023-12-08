@@ -24,8 +24,7 @@ followed by local installation with::
 **FetalBrain package**: The fetalbrain package will be hosted on pip, but can currently be used by cloning the 
 repository locally with::
 
-    $ git clone git@github.com:lindehesse/OMNI_ultrasound.git
-
+    $ git clone git@github.com:oxford-omni-lab-org/OMNI_ultrasound.git
 
 User installation
 ^^^^^^^^^^^^^^^^^
