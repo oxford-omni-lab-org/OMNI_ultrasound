@@ -82,7 +82,7 @@ class AlignmentModel(nn.Module):
         """Forward pass of the alignment model
 
         Args:
-            x: batch of data of size [B, 1, H, W, D] with pixel values between 0 and 1
+            x: batch of data of size [B, 1, H, W, D] with pixel values between 0 and 255
 
         Returns:
             translation: translation parameters of size [B, 3] between 0 and 1
@@ -94,6 +94,8 @@ class AlignmentModel(nn.Module):
             >>> dummy_scan = torch.rand(1,1,160,160,160)
             >>> translation, rotation, scaling = model(dummy_scan)
         """
+        # Normalize input to [0,1]
+        x = x / 255
 
         # Model X1
         hidden = self.enc_X1_cb00(x)

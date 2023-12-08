@@ -3,6 +3,15 @@ This modules contains helper functions for read and write I/O functions. Please 
 images when using the packages in this repository to ensure consistency. For example, niibabel and simpleITK read
 in image differently, which can cause problems when using these together. The read/write functions in this module
 have all been adapated so that they are consistent with each other.
+
+For reading .nii / .nii.gz / .mha use:
+    >>> image, spacing = read_image(vol_path)
+
+For reading matlab image files use:
+    >>> image, spacing = read_matlab_image(vol_path)
+
+For writing .nii / .nii.gz / .mha use:
+    >>> write_image(vol_path, image, spacing)
 """
 
 import numpy as np
@@ -22,7 +31,7 @@ TEST_SAVEPATH_MHA = Path("test_data/test.mha")
 def _read_mha_image(
     vol_path: Path, return_info: bool = False
 ) -> Union[np.ndarray, tuple[np.ndarray, tuple[float, float, float]]]:
-    """ Reads an sitk image, and returns the numpy array and optionally the spacing
+    """Reads an sitk image, and returns the numpy array and optionally the spacing
 
     Args:
         vol_path: path to read the image from
@@ -53,7 +62,7 @@ def _read_mha_image(
 def _read_nii_image(
     vol_path: Path, return_info: bool = False
 ) -> Union[np.ndarray, tuple[np.ndarray, tuple[float, float, float]]]:
-    """ Reads an nifti image, and returns the numpy array and optionally the spacing
+    """Reads an nifti image, and returns the numpy array and optionally the spacing
 
     Args:
         vol_path: path to read the image from
@@ -78,7 +87,7 @@ def _read_nii_image(
 
 
 @typechecked
-def read_image(vol_path: Path) -> tuple[np.ndarray, tuple[float, float, float]]:
+def read_image(vol_path: Union[Path, str]) -> tuple[np.ndarray, tuple[float, float, float]]:
     """Reads in an image, and returns the numpy array and spacing
 
     Args:
@@ -94,6 +103,9 @@ def read_image(vol_path: Path) -> tuple[np.ndarray, tuple[float, float, float]]:
     Example:
         >>> example_scan, spacing = read_image(TEST_IMAGE_PATH)
     """
+    if isinstance(vol_path, str):
+        vol_path = Path(vol_path)
+
     if vol_path.suffix == ".mha":
         nii_array, spacing = _read_mha_image(vol_path, return_info=True)
 
@@ -106,8 +118,32 @@ def read_image(vol_path: Path) -> tuple[np.ndarray, tuple[float, float, float]]:
     return nii_array, spacing
 
 
+def read_matlab_image(vol_path: Union[Path, str]) -> tuple[np.ndarray, tuple[float, float, float]]:
+    """ This function can be used to read the matlab image file from the longitudinal atlas. To use this
+    function the package needs to be install with the [matlab] addition (or this can be manually installed
+    with pip install scipy). As there is no spacing information in the matlab files, this is hardcode
+    to (0.6, 0.6, 0.6).
+
+    Args:
+        vol_path: path to the matlab image
+
+    Returns:
+        image_data: np.ndarray of the image
+        spacing: spacing of the image (0.6, 0.6, 0.6)
+    """
+    from scipy.io import loadmat
+
+    mat_img = loadmat(vol_path)
+    img_data = mat_img["img_brain"][:, :, :, 0]
+
+    # hardcoded spacing for matlab files
+    spacing = (0.6, 0.6, 0.6)
+
+    return img_data, spacing
+
+
 def generate_nii_affine(spacing: tuple[float, float, float]) -> np.ndarray:
-    """ Generate the affine matrix from the spacing.
+    """Generate the affine matrix from the spacing.
     The negative spacing for the first two dimensions is to ensure consistency with the mha format.
 
     Args:
@@ -129,7 +165,9 @@ def generate_nii_affine(spacing: tuple[float, float, float]) -> np.ndarray:
 
 
 @typechecked
-def write_image(vol_path: Path, image_array: np.ndarray, spacing: tuple[float, float, float] = (0.6, 0.6, 0.6)) -> None:
+def write_image(
+    vol_path: Union[Path, str], image_array: np.ndarray, spacing: tuple[float, float, float] = (0.6, 0.6, 0.6)
+) -> None:
     """Saves a numpy array as an nifti or mha image, the type is determined by the file extension
 
     Args:
@@ -141,6 +179,9 @@ def write_image(vol_path: Path, image_array: np.ndarray, spacing: tuple[float, f
         >>> test_image =  np.random.rand(160, 160, 160)
         >>> write_image(TEST_SAVEPATH_MHA, test_image)
     """
+
+    if isinstance(vol_path, str):
+        vol_path = Path(vol_path)
 
     # check inputs
     assert 2 <= len(image_array.shape) <= 5, "im_array must be 2D-4D"

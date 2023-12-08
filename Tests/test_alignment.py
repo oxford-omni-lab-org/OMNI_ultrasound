@@ -1,7 +1,8 @@
 from pathlib import Path
 import torch
-import doctest
-from fetalbrain.utils import read_image
+from PIL import Image
+import numpy as np
+from fetalbrain.utils import read_image, write_image
 from fetalbrain.alignment.fBAN_v1 import AlignmentModel
 from fetalbrain.alignment.align import (
     load_alignment_model,
@@ -10,16 +11,19 @@ from fetalbrain.alignment.align import (
     transform_from_params,
     transform_from_affine,
     _get_transform_to_atlasspace,
+    _get_atlastransform_itksnap,
     align_to_atlas,
-)  # noqa: E402
-from fetalbrain.utils import write_image, plot_midplanes
-from fetalbrain.alignment.kelluwen_transforms import apply_affine
+)
 
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 TEST_IMAGE_PATH = Path("Tests/testdata/example_image.nii.gz")
-TEMP_SAVE_PATH = Path("Tests/testdata/alignment/temp")
+TEST_ALIGNMENT_PATH = Path("Tests/testdata/alignment")
+TEMP_SAVE_PATH = TEST_ALIGNMENT_PATH / "temp"
 
-# doctest.testmod()
+
+def compare_threshold(scan1: torch.Tensor, scan2: torch.Tensor, threshold: float = 1.0) -> float:
+    no_pixels = 160 * 160 * 160
+    percentage_equal = torch.count_nonzero(torch.abs(scan1 - scan2) <= threshold) / (no_pixels) * 100
+    return percentage_equal.item()
 
 
 def test_load_alignment_model() -> None:
@@ -30,10 +34,16 @@ def test_load_alignment_model() -> None:
 def test_prepare_scan() -> None:
     example_scan, _ = read_image(TEST_IMAGE_PATH)
     torch_scan = prepare_scan(example_scan)
+
+    # expecting it to be a tensor between 0 and 255
+    assert torch.min(torch_scan) >= 0.0
+    assert torch.max(torch_scan) > 1.0
+    assert torch.max(torch_scan) <= 255.0
     assert torch_scan.shape == (1, 1, 160, 160, 160)
 
 
-def test_align_scan() -> None:
+def test_align_scan_bean() -> None:
+    """compare the alignment with a reference image for BEAN aligned images"""
     example_scan, spacing = read_image(TEST_IMAGE_PATH)
     torch_scan = prepare_scan(example_scan)
     model = load_alignment_model()
@@ -42,6 +52,8 @@ def test_align_scan() -> None:
 
     # verify the scan is of the same shape as before
     assert aligned_scan.shape == torch_scan.shape
+    assert torch.min(aligned_scan) >= 0.0
+    assert torch.max(aligned_scan) <= 255.0
 
     assert "scaling" in params.keys()
     assert "rotation" in params.keys()
@@ -51,11 +63,51 @@ def test_align_scan() -> None:
     assert params["rotation"].shape == (1, 4)
     assert params["translation"].shape == (1, 3)
 
-    write_image(
-        TEMP_SAVE_PATH / "aligned_scan.nii.gz",
-        aligned_scan.squeeze().cpu().numpy(),
-        spacing=spacing,
-    )
+    # verify that the aligned scan is the same as before
+    aligned_scan_np = aligned_scan.squeeze().cpu().numpy()
+    ref_frame = np.array(Image.open(TEST_ALIGNMENT_PATH / "aligned_axial_ref.png"))
+    new_frame = np.uint8(aligned_scan_np[:, :, 80])
+
+    # test that they differ no more than 1 pixel
+    assert np.allclose(ref_frame, new_frame, atol=1), "The aligned image is too different from the reference image"
+
+    # to save a new reference image use:
+    # pil_img = Image.fromarray(np.uint8(aligned_scan_np[:, :, 80]), mode="L")
+    # pil_img.save(TEST_ALIGNMENT_PATH / "aligned_axial_ref.png", "png")
+
+
+def test_align_scan_atlas() -> None:
+    """compare the alignment with a reference image for atlas aligned images"""
+    example_scan, spacing = read_image(TEST_IMAGE_PATH)
+    torch_scan = prepare_scan(example_scan)
+    model = load_alignment_model()
+
+    aligned_scan, params = align_to_atlas(torch_scan, model)
+
+    # verify the scan is of the same shape as before
+    assert aligned_scan.shape == torch_scan.shape
+    assert torch.min(aligned_scan) >= 0.0
+    assert torch.max(aligned_scan) <= 255.0
+
+    assert "scaling" in params.keys()
+    assert "rotation" in params.keys()
+    assert "translation" in params.keys()
+
+    assert params["scaling"].shape == (1, 3)
+    assert params["rotation"].shape == (1, 4)
+    assert params["translation"].shape == (1, 3)
+
+    # verify that the aligned scan is the same as before
+    aligned_scan_np = aligned_scan.squeeze().cpu().numpy()
+    ref_frame = np.array(Image.open(TEST_ALIGNMENT_PATH / "aligned_axial_ref_atlas.png"))
+    new_frame = np.uint8(aligned_scan_np[:, :, 80])
+
+    # test that they differ no more than 1 pixel
+    assert np.allclose(ref_frame, new_frame, atol=1), "The aligned image is too different from the reference image"
+
+    # to save a new reference image use:
+    # pil_img = Image.fromarray(np.uint8(aligned_scan_np[:, :, 80]), mode="L")
+    # pil_img.save(TEST_ALIGNMENT_PATH / "aligned_axial_ref_atlas.png", "png")
 
 
 def test_align_from_params() -> None:
@@ -63,11 +115,16 @@ def test_align_from_params() -> None:
     torch_scan = prepare_scan(example_scan)
     model = load_alignment_model()
 
-    # Compare the two alignment functions
+    # Direct alignment with BEAN
     aligned, params = align_to_bean(torch_scan, model)
+
+    # Use alignment parameters to align (clamping required after)
     aligned_from_params = transform_from_params(
         torch_scan, rotation=params["rotation"], translation=params["translation"], scaling=params["scaling"]
     )
+    aligned_from_params = torch.clamp(aligned_from_params, 0, 255)
+
+    # ensure they are the same
     assert torch.all(aligned == aligned_from_params)
 
     # set certain parameters to default values
@@ -80,7 +137,7 @@ def test_align_from_params() -> None:
     )
 
 
-def test_unalign_scan() -> None:
+def test_unalign_scan_bean() -> None:
     """This test tests that a scan can be aligned and then unaligned to the original image,
     resulting in the same image."""
     example_scan, spacing = read_image(TEST_IMAGE_PATH)
@@ -90,27 +147,31 @@ def test_unalign_scan() -> None:
     aligned_image, _, transform = align_to_bean(torch_scan, model, return_affine=True, scale=False)
     unaligned_im = transform_from_affine(aligned_image, transform.inverse())
 
-    # write images to compare them manually, some interpolation artefacts are introduced
-    # so difficult to compare max pixel values
-    # write_image(
-    #     TEMP_SAVE_PATH / "original.nii.gz",
-    #     torch_scan.squeeze().cpu().numpy(),
-    #     spacing=spacing,
-    # )
-    # write_image(
-    #     TEMP_SAVE_PATH / 'unaligned/nii.gz',
-    #     unaligned_im.squeeze().cpu().numpy(),
-    #     spacing=spacing,
-    # )
+    # verify that the aligned scan is the same as before
+    perc_equal = compare_threshold(torch_scan, unaligned_im, threshold=5.0)
 
-    # also write them to png to manually inspect
-    fig_original = plot_midplanes(torch_scan.squeeze().cpu().numpy(), "Original")
-    fig_unaligned = plot_midplanes(unaligned_im.squeeze().cpu().numpy(), "Unaligned")
-    fig_original.savefig(TEMP_SAVE_PATH / 'original.png')
-    fig_unaligned.savefig(TEMP_SAVE_PATH / "unaligned.png")
+    # 95% of the pixels should be within 5 of the original value, the exact thresholds are arbitrary
+    assert perc_equal > 95
 
 
-def test_scaling_twosteps() -> None:
+def test_unalign_scan_atlas() -> None:
+    """This test tests that a scan can be aligned and then unaligned to the original image,
+    resulting in the same image."""
+    example_scan, spacing = read_image(TEST_IMAGE_PATH)
+    torch_scan = prepare_scan(example_scan)
+    model = load_alignment_model()
+
+    aligned_image, _, transform = align_to_atlas(torch_scan, model, return_affine=True, scale=False)
+    unaligned_im = transform_from_affine(aligned_image, transform.inverse())
+
+    # verify that the aligned scan is the same as before
+    perc_equal = compare_threshold(torch_scan, unaligned_im, threshold=5.0)
+
+    # 95% of the pixels should be within 5 of the original value, the exact thresholds are arbitrary
+    assert perc_equal > 95
+
+
+def test_scaling_twosteps_bean() -> None:
     """This function test whether applying first alignment without scaling, and then applying the scaling seperately
     gives the same result as applying the alignment + scaling in one step."""
     example_scan, spacing = read_image(TEST_IMAGE_PATH)
@@ -118,30 +179,34 @@ def test_scaling_twosteps() -> None:
     model = load_alignment_model()
 
     # 1 step approach
-    aligned_scan, params = align_to_bean(torch_scan, model)
+    aligned_scan, params = align_to_bean(torch_scan, model, scale=True)
 
     # 2 step approach
     aligned_noscale, _ = align_to_bean(torch_scan, model, scale=False)
     aligned_twostep = transform_from_params(aligned_noscale, scaling=params["scaling"])
 
-    # write images to compare them manually
-    # write_image(
-    #     Path( TEMP_SAVE_PATH / "aligned_scan_onestep.nii.gz"),
-    #     aligned_scan.squeeze().cpu().numpy(),
-    #     spacing=spacing,
-    # )
-    # write_image(
-    #     Path( TEMP_SAVE_PATH / "aligned_scan_twostep.nii.gz"),
-    #     aligned_twostep.squeeze().cpu().numpy(),
-    #     spacing=spacing,
-    # )
+    # verify that the aligned scan is the same as before
+    perc_equal = compare_threshold(aligned_scan, aligned_twostep, threshold=5.0)
+    assert perc_equal > 98
 
-    # compare the two images
-    max_diff = torch.max(torch.abs(aligned_scan - aligned_twostep))
-    print(f"Max difference between the two images: {max_diff:.3f} on pixel range 0-1")
 
-    # this threshold is quite arbitrary, better to check the similarities of the image visually in itk-snap
-    assert max_diff < 0.25, "The two images are too different"
+def test_scaling_twosteps_atlas() -> None:
+    """This function test whether applying first alignment without scaling, and then applying the scaling seperately
+    gives the same result as applying the alignment + scaling in one step."""
+    example_scan, spacing = read_image(TEST_IMAGE_PATH)
+    torch_scan = prepare_scan(example_scan)
+    model = load_alignment_model()
+
+    # 1 step approach
+    aligned_scan, params = align_to_atlas(torch_scan, model, scale=True)
+
+    # 2 step approach
+    aligned_noscale, _ = align_to_atlas(torch_scan, model, scale=False)
+    aligned_twostep = transform_from_params(aligned_noscale, scaling=params["scaling"])
+
+    # verify that the aligned scan is the same as before
+    perc_equal = compare_threshold(aligned_scan, aligned_twostep, threshold=5.0)
+    assert perc_equal > 98
 
 
 def test_permutations() -> None:
@@ -157,72 +222,26 @@ def test_permutations() -> None:
 
     # align scan, and permuted scan
     aligned_scan, _ = align_to_bean(torch_scan, model)
-    aligned_scan_perm, _ = align_to_bean(torch_scan.permute(0, 1, 4, 3, 2), model)
+    aligned_scan_perm, _ = align_to_bean(torch.flip(torch_scan.permute(0, 1, 4, 3, 2), [3]), model)
 
-    # odd no. axis permutation flips axis, so we have to correct for that in the results
-    aligned_np = aligned_scan.squeeze().cpu().numpy()
-    aligned_perm_np = aligned_scan_perm.squeeze().cpu().numpy()[::-1]
-
-    # plot and save, these should look roughly similar (except for differences in stochasticity in network)
-    fig_original = plot_midplanes(aligned_np, title="aligned scan")
-    fig_permuted = plot_midplanes(aligned_perm_np, title="aligned scan perm")
-    fig_original.savefig(TEMP_SAVE_PATH / "aligned_original.png")
-    fig_permuted.savefig(TEMP_SAVE_PATH / "aligned_permuted.png")
-
-
-def test_align_to_atlas() -> None:
-    example_scan, spacing = read_image(TEST_IMAGE_PATH)
-    torch_scan = prepare_scan(example_scan)
-    model = load_alignment_model()
-
-    # align scan (has to be scale = true to make transform to atlasspace work)
-    aligned_scan, params, affine = align_to_bean(torch_scan, model, return_affine=True, scale=True)
-
-    # get the transformation to atlas space
-    atlas_transform = _get_transform_to_atlasspace()
-
-    # 1 and 2 step approach
-    aligned_atlas = apply_affine(aligned_scan, atlas_transform)
-    aligned_atlas_direct = apply_affine(torch_scan, atlas_transform @ affine)
-
-    assert isinstance(aligned_atlas, torch.Tensor)
-    assert isinstance(aligned_atlas_direct, torch.Tensor)
-
-    fig_2step = plot_midplanes(aligned_atlas.squeeze().cpu().numpy(), title="aligned atlas")
-    fig_direct = plot_midplanes(aligned_atlas_direct.squeeze().cpu().numpy(), title="aligned atlas direct")
-
-    fig_2step.savefig(TEMP_SAVE_PATH / "align_to_atlas_2step.png")
-    fig_direct.savefig(TEMP_SAVE_PATH / "align_to_atlas_1step.png")
-
-
-def test_align_to_atlas_direct() -> None:
-    example_scan, spacing = read_image(TEST_IMAGE_PATH)
-    torch_scan = prepare_scan(example_scan)
-    model = load_alignment_model()
-
-    aligned_to_atlas_unscaled, transform_dict = align_to_atlas(torch_scan, model, scale=False, return_affine=False)
-    aligned_to_atlas_scaled, transform_dict = align_to_atlas(torch_scan, model, scale=True, return_affine=False)
-
-    plot_midplanes(aligned_to_atlas_unscaled.squeeze().cpu().numpy(), title="unscaled")
-    plot_midplanes(aligned_to_atlas_scaled.squeeze().cpu().numpy(), title="scaled")
-
-    aligned_to_atlas_scaled_2step = transform_from_params(aligned_to_atlas_unscaled, scaling=transform_dict["scaling"])
-    plot_midplanes(aligned_to_atlas_scaled_2step.squeeze().cpu().numpy(), title="unscaled")
+    # larger margins because stochasticity of model results in larger differences (i.e. not only interpolation)
+    perc_equal = compare_threshold(aligned_scan, aligned_scan_perm, threshold=10.0)
+    assert perc_equal > 80
 
 
 def test_get_atlastransform() -> None:
     """test function to assert the generated atlas transformations is correct"""
-    atlas_transform = _get_transform_to_atlasspace()
+    atlas_transform = _get_atlastransform_itksnap()
 
     assert atlas_transform.shape == (1, 4, 4)
 
     translation = atlas_transform[0, :3, 3]
-    assert torch.allclose(translation, torch.tensor([7.8464, -0.1925, 8.5786]), atol=1e-4)
+    assert torch.allclose(translation, torch.tensor([8.8243, 0.2393, 5.1726]), atol=1e-4)
 
     rotation = atlas_transform[0, :3, :3]
     assert torch.allclose(
         rotation,
-        torch.tensor([[-0.0033, 0.9995, -0.0320], [0.9997, 0.0025, -0.0255], [0.0254, 0.0321, 0.9992]]),
+        torch.tensor([[0.9929, 0.0120, -0.1181], [-0.0156, 0.9994, -0.0303], [0.1176, 0.0320, 0.9925]]),
         atol=1e-4,
     )
 
@@ -232,11 +251,30 @@ def test_get_transform_to_atlasspace() -> None:
     assert full_atlasspace_transform.shape == (1, 4, 4)
 
     translation = full_atlasspace_transform[0, :3, 3]
-    assert torch.allclose(translation, torch.tensor([7.8464, -0.1925, 8.5786]), atol=1e-4)
+    assert torch.allclose(translation, torch.tensor([8.8243, 0.2393, 5.1726]), atol=1e-4)
 
     rotation = full_atlasspace_transform[0, :3, :3]
     assert torch.allclose(
         rotation,
-        torch.tensor([[-0.0033, 0.9995, -0.0320], [0.9997, 0.0025, -0.0255], [0.0254, 0.0321, 0.9992]]),
+        torch.tensor([[-0.0120, 0.9929, -0.1181], [-0.9994, -0.0156, -0.0303], [-0.0320, 0.1176, 0.9925]]),
         atol=1e-4,
     )
+
+
+def test_consistency() -> None:
+    example_scan, spacing = read_image(TEST_IMAGE_PATH)
+    torch_scan = prepare_scan(example_scan)
+    model = load_alignment_model()
+
+    # aligned image
+    aligned_scan, params = align_to_atlas(torch_scan, model, scale=False)
+    write_image(TEMP_SAVE_PATH / "aligned.nii.gz", aligned_scan.numpy().squeeze(), spacing=(0.6, 0.6, 0.6))
+
+    # reload and align again
+    example_reloaded, _ = read_image(TEMP_SAVE_PATH / "aligned.nii.gz")
+    example_reloaded_torch = prepare_scan(example_reloaded)
+    aligned_scan_reload, params = align_to_atlas(example_reloaded_torch, model, scale=False)
+
+    # verify that they are similar
+    perc_equal = compare_threshold(aligned_scan, aligned_scan_reload, threshold=10.0)
+    assert perc_equal > 75

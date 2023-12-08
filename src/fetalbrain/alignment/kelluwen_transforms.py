@@ -357,9 +357,9 @@ def generate_affine(
     """Generates an affine transform from translation, rotation, and scaling parameters.
 
     Args:
-        parameter_translation: Translation parameters. Must be of shape (B, C, parameters) or
-            (B, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
-        parameter_rotation: Rotation parameters. Must be of shape (B, C,  parameters) or (B, parameters),
+        parameter_translation: Translation parameters in pixels between -80 and 80. Must be of shape (B, C, parameters)
+            or (B, parameters), with parameters=2 or 3 for 2D and 3D images, respectively.
+        parameter_rotation: Rotation parameters in radians. Must be of shape (B, C,  parameters) or (B, parameters),
             with parameters=1, 3 or 4, for 2D, 3D Euler angles, and 3D quaternions, respectively.
         parameter_scaling : Scaling parameters. Must be of shape (B, C,  parameters) or (B, parameters),
             with parameters=2 or 3 for 2D and 3D images, respectively.

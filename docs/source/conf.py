@@ -27,6 +27,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinxext.opengraph',
+    'sphinx.ext.intersphinx'
 ]
 
 

@@ -24,4 +24,5 @@ jobs:
         run: |
           pip install .[all]
           export PYTHONPATH=$PYTHONPATH:${GITHUB_WORKSPACE}/src
-          pytest Tests/test_test.py
+          pytest Tests/test_alignment.py
+
