@@ -38,7 +38,7 @@ from ..model_paths import SEGM_MODEL_PATH
 from ..alignment.align import prepare_scan
 
 
-def load_segmentation_model(model_path: Optional[Path] = None) -> torch.nn.DataParallel[UNet]:
+def load_segmentation_model(model_path: Optional[Path] = None, device: str = 'cpu') -> torch.nn.DataParallel[UNet]:
     """Load the trained segmentation model
     Args:
         model_path: path to the trained model. Defaults to None (uses the default model).
@@ -57,7 +57,10 @@ def load_segmentation_model(model_path: Optional[Path] = None) -> torch.nn.DataP
     model = torch.nn.DataParallel(UNet(1, 5, min_featuremaps=16, depth=5))
 
     # load model weights
-    model_weights = torch.load(model_path)
+    if torch.cuda.is_available():
+        model_weights = torch.load(model_path)
+    else:
+        model_weights = torch.load(model_path, map_location=torch.device('cpu'))
     model.load_state_dict(model_weights["model_state_dict"])
 
     # set model to evaluation mode
