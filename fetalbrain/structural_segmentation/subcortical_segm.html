@@ -235,7 +235,7 @@ the segmentation model, prepares the scan for segmentation and predicts the segm
 </pre></div>
 </div>
 <p>As for the alignment, it is recommended to use the functions <a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.load_segmentation_model" title="fetalbrain.structural_segmentation.subcortical_segm.load_segmentation_model"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_segmentation_model()</span></code></a>,
-<a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.prepare_scan_segm" title="fetalbrain.structural_segmentation.subcortical_segm.prepare_scan_segm"><code class="xref py py-func docutils literal notranslate"><span class="pre">prepare_scan_segm()</span></code></a>, and <a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical" title="fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical"><code class="xref py py-func docutils literal notranslate"><span class="pre">segment_subcortical()</span></code></a> directly to have more control over the
+<code class="xref py py-func docutils literal notranslate"><span class="pre">prepare_scan_segm()</span></code>, and <a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical" title="fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical"><code class="xref py py-func docutils literal notranslate"><span class="pre">segment_subcortical()</span></code></a> directly to have more control over the
 workflow. This can for example be used as follows:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">segm_model</span> <span class="o">=</span> <span class="n">load_segmentation_model</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
@@ -312,32 +312,6 @@ is larger than 1.</p>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">load_segmentation_model</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fetalbrain.structural_segmentation.subcortical_segm.prepare_scan_segm">
-<span class="sig-prename descclassname"><span class="pre">fetalbrain.structural_segmentation.subcortical_segm.</span></span><span class="sig-name descname"><span class="pre">prepare_scan_segm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../../_modules/fetalbrain/structural_segmentation/subcortical_segm.html#prepare_scan_segm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.structural_segmentation.subcortical_segm.prepare_scan_segm" title="Link to this definition">#</a></dt>
-<dd><p>prepares the scan for subcortical segmentation</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>image</strong> – numpy array or tensor of size
-[B, C, H, W, D], or [B, H, W, D], or [H, W, D]</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>tensor of size [B, C, H, W, D] with values between 0 and 255</p>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">prepare_scan_segm</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">prepare_scan_segm</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -462,7 +436,6 @@ ventricle horn (LPVH), 3 = cavum septum pellucidum et vergae (CSPV), 4 = cerebel
 <li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.compute_volume_segm"><code class="docutils literal notranslate"><span class="pre">compute_volume_segm()</span></code></a></li>
 <li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.keep_largest_compoment"><code class="docutils literal notranslate"><span class="pre">keep_largest_compoment()</span></code></a></li>
 <li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.load_segmentation_model"><code class="docutils literal notranslate"><span class="pre">load_segmentation_model()</span></code></a></li>
-<li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.prepare_scan_segm"><code class="docutils literal notranslate"><span class="pre">prepare_scan_segm()</span></code></a></li>
 <li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_scan_subc"><code class="docutils literal notranslate"><span class="pre">segment_scan_subc()</span></code></a></li>
 <li><a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical"><code class="docutils literal notranslate"><span class="pre">segment_subcortical()</span></code></a></li>
 </ul>

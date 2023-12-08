@@ -363,20 +363,26 @@ If scaling is set to False, the inverse scaling transform is applied after trans
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fetalbrain.alignment.align.prepare_scan">
-<span class="sig-prename descclassname"><span class="pre">fetalbrain.alignment.align.</span></span><span class="sig-name descname"><span class="pre">prepare_scan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../../_modules/fetalbrain/alignment/align.html#prepare_scan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.alignment.align.prepare_scan" title="Link to this definition">#</a></dt>
-<dd><p>Prepares the scan to be aligned with the alignment model.
-Transforms the numpy array to pytorch and adds the batch and channel dimension.</p>
+<span class="sig-prename descclassname"><span class="pre">fetalbrain.alignment.align.</span></span><span class="sig-name descname"><span class="pre">prepare_scan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../../_modules/fetalbrain/alignment/align.html#prepare_scan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.alignment.align.prepare_scan" title="Link to this definition">#</a></dt>
+<dd><p>prepares the scan for subcortical segmentation</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>image</strong> – scan to be transformed</p>
+<dd class="field-odd"><p><strong>image</strong> – numpy array or tensor of size
+[B, C, H, W, D], or [B, H, W, D], or [H, W, D]</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>torch_imge</strong> – pytorch tensor of the scan</p>
+<dd class="field-even"><p>tensor of size [B, C, H, W, D] with values between 0 and 255</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dummy_scan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">torch_scan</span> <span class="o">=</span> <span class="n">prepare_scan</span><span class="p">(</span><span class="n">dummy_scan</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">prepare_scan_segm</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">prepare_scan_segm</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </dd></dl>

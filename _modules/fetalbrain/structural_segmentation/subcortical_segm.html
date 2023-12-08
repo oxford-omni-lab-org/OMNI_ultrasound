@@ -244,14 +244,11 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
-
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">typeguard</span> <span class="kn">import</span> <span class="n">typechecked</span>
 <span class="kn">import</span> <span class="nn">SimpleITK</span> <span class="k">as</span> <span class="nn">sitk</span>
 <span class="kn">from</span> <span class="nn">.segmentation_model</span> <span class="kn">import</span> <span class="n">UNet</span>
 <span class="kn">from</span> <span class="nn">..model_paths</span> <span class="kn">import</span> <span class="n">SEGM_MODEL_PATH</span>
-
-
+<span class="kn">from</span> <span class="nn">..alignment.align</span> <span class="kn">import</span> <span class="n">prepare_scan</span>
 
 
 <div class="viewcode-block" id="load_segmentation_model">
@@ -283,47 +280,6 @@
     <span class="n">torch</span><span class="o">.</span><span class="n">set_grad_enabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">model</span></div>
-
-
-
-<div class="viewcode-block" id="prepare_scan_segm">
-<a class="viewcode-back" href="../../../fetalbrain/structural_segmentation/subcortical_segm.html#fetalbrain.structural_segmentation.subcortical_segm.prepare_scan_segm">[docs]</a>
-<span class="nd">@typechecked</span>
-<span class="k">def</span> <span class="nf">prepare_scan_segm</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;prepares the scan for subcortical segmentation</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        image: numpy array or tensor of size</span>
-<span class="sd">            [B, C, H, W, D], or [B, H, W, D], or [H, W, D]</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        :tensor of size [B, C, H, W, D] with values between 0 and 255</span>
-
-<span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; image = np.random.random_sample((1, 1, 160, 160, 160))</span>
-<span class="sd">        &gt;&gt;&gt; image = prepare_scan_segm(image)</span>
-<span class="sd">        &gt;&gt;&gt; assert torch.max(image) &gt; 1</span>
-
-<span class="sd">        &gt;&gt;&gt; image = torch.rand((1, 1, 160, 160, 160))</span>
-<span class="sd">        &gt;&gt;&gt; image = prepare_scan_segm(image)</span>
-<span class="sd">        &gt;&gt;&gt; assert torch.max(image) &gt; 1</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># convert to torch tensor</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
-
-    <span class="c1"># add channel and batch dimensions</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-
-    <span class="c1"># scale between 0 and 1</span>
-    <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span> <span class="o">*</span> <span class="mi">255</span>
-
-    <span class="k">return</span> <span class="n">image</span></div>
 
 
 
@@ -473,7 +429,7 @@
 <span class="k">def</span> <span class="nf">segment_scan_subc</span><span class="p">(</span>
     <span class="n">aligned_scan</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">connected_component</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; full function to segment a single scan or a batch of scans</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;full function to segment a single scan or a batch of scans</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        aligned_scan: input array or tensor to segment, can be of size [B,H,W,D], [B,C,H,W,D] or [H,W,D]</span>
@@ -491,7 +447,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">segm_model</span> <span class="o">=</span> <span class="n">load_segmentation_model</span><span class="p">()</span>
-    <span class="n">aligned_scan_prep</span> <span class="o">=</span> <span class="n">prepare_scan_segm</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
+    <span class="n">aligned_scan_prep</span> <span class="o">=</span> <span class="n">prepare_scan</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
 
     <span class="n">segm_pred</span><span class="p">,</span> <span class="n">key_maps</span> <span class="o">=</span> <span class="n">segment_subcortical</span><span class="p">(</span><span class="n">aligned_scan_prep</span><span class="p">,</span> <span class="n">segm_model</span><span class="p">)</span>
     <span class="n">segm_pred_np</span> <span class="o">=</span> <span class="n">segm_pred</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>

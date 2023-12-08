@@ -252,7 +252,7 @@ for package development or advanced use of the package.</p>
 <span class="kn">from</span> <span class="nn">fetalbrain.alignment.align</span> <span class="kn">import</span> <span class="n">align_scan</span>
 <span class="kn">from</span> <span class="nn">fetalbrain.utils</span> <span class="kn">import</span> <span class="n">read_image</span><span class="p">,</span> <span class="n">plot_midplanes</span>
 
-<span class="n">TEST_IMAGE_PATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;src/fetalbrain/alignment/test_data/06-5010_152days_0356.mha&quot;</span><span class="p">)</span>
+<span class="n">TEST_IMAGE_PATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;Tests/testdata/example_image.nii.gz&quot;</span><span class="p">)</span>
 <span class="n">image</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">TEST_IMAGE_PATH</span><span class="p">)</span>
 
 <span class="c1"># align the scan to the atlas space</span>
