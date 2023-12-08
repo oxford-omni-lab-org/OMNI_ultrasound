@@ -230,6 +230,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span> <span class="nn">SimpleITK</span> <span class="k">as</span> <span class="nn">sitk</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nib</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
@@ -257,6 +258,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">assert</span> <span class="n">vol_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;vol_path does not exist: </span><span class="si">{</span><span class="n">vol_path</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">assert</span> <span class="n">vol_path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.mha&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;vol_path must be a .mha file: </span><span class="si">{</span><span class="n">vol_path</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="n">itk_img</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">ReadImage</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">vol_path</span><span class="p">))</span>
     <span class="n">sitk_array</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetArrayFromImage</span><span class="p">(</span><span class="n">itk_img</span><span class="p">)</span>
@@ -286,11 +288,12 @@
 <span class="sd">        spacing: spacing of the image (optional)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="n">vol_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;vol_path does not exist: </span><span class="si">{</span><span class="n">vol_path</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">assert</span> <span class="n">vol_path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.nii&quot;</span><span class="p">,</span> <span class="s2">&quot;.gz&quot;</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;vol_path must be a .nii or .nii.gz file: </span><span class="si">{</span><span class="n">vol_path</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="n">nib_img</span><span class="p">:</span> <span class="n">nib</span><span class="o">.</span><span class="n">Nifti1Image</span> <span class="o">=</span> <span class="n">nib</span><span class="o">.</span><span class="n">nifti1</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">vol_path</span><span class="p">)</span>
 
     <span class="c1"># extract the data</span>
-    <span class="n">im_array</span> <span class="o">=</span> <span class="n">nib_img</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()</span>
+    <span class="n">im_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nib_img</span><span class="o">.</span><span class="n">dataobj</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">return_info</span><span class="p">:</span>
         <span class="n">spacing</span> <span class="o">=</span> <span class="n">nib_img</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get_zooms</span><span class="p">()</span>
         <span class="n">spacing</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spacing</span><span class="p">])</span>
@@ -337,7 +340,7 @@
 <div class="viewcode-block" id="read_matlab_image">
 <a class="viewcode-back" href="../../fetalbrain/utils.html#fetalbrain.utils.read_matlab_image">[docs]</a>
 <span class="k">def</span> <span class="nf">read_matlab_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; This function can be used to read the matlab image file from the longitudinal atlas. To use this</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This function can be used to read the matlab image file from the longitudinal atlas. To use this</span>
 <span class="sd">    function the package needs to be install with the [matlab] addition (or this can be manually installed</span>
 <span class="sd">    with pip install scipy). As there is no spacing information in the matlab files, this is hardcode</span>
 <span class="sd">    to (0.6, 0.6, 0.6).</span>
@@ -388,16 +391,20 @@
 
 <div class="viewcode-block" id="write_image">
 <a class="viewcode-back" href="../../fetalbrain/utils.html#fetalbrain.utils.write_image">[docs]</a>
-<span class="nd">@typechecked</span>
 <span class="k">def</span> <span class="nf">write_image</span><span class="p">(</span>
-    <span class="n">vol_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">image_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">spacing</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)</span>
+    <span class="n">vol_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">image_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">spacing</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">),</span>
+    <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Saves a numpy array as an nifti or mha image, the type is determined by the file extension</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Saves a numpy array as an nifti or mha image, the type is determined by the file extension.</span>
+<span class="sd">    The images are written with integer pixel values between 0 and 255</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        vol_path: path to save the images to</span>
 <span class="sd">        image_array: numpy array with the image data</span>
 <span class="sd">        spacing: spacing of the pixels, defaults to (0.6, 0.6, 0.6)</span>
+<span class="sd">        dtype: dtype of the saved image, defaults to np.uint8</span>
 
 <span class="sd">    Example:</span>
 <span class="sd">        &gt;&gt;&gt; test_image =  np.random.rand(160, 160, 160)</span>
@@ -406,6 +413,13 @@
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vol_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">vol_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">vol_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image_array</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;Image array has values between 0 and 1, expects pixel values between 0 and 255</span><span class="se">\</span>
+<span class="s2">                      for image data&quot;</span><span class="p">,</span>
+            <span class="ne">UserWarning</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="c1"># check inputs</span>
     <span class="k">assert</span> <span class="mi">2</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;im_array must be 2D-4D&quot;</span>
@@ -417,7 +431,7 @@
 
     <span class="k">if</span> <span class="n">vol_path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.mha&quot;</span><span class="p">:</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;mha images only supported for 3D images&quot;</span>
-        <span class="n">sitk_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">image_array</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int16&quot;</span><span class="p">)</span>
+        <span class="n">sitk_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">image_array</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
         <span class="n">sitk_im</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">sitk_array</span><span class="p">)</span>
 
         <span class="c1"># set the spacing</span>
@@ -425,12 +439,13 @@
         <span class="n">sitk_im</span><span class="o">.</span><span class="n">SetOrigin</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
 
         <span class="c1"># save the image</span>
-        <span class="n">sitk</span><span class="o">.</span><span class="n">WriteImage</span><span class="p">(</span><span class="n">sitk_im</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">vol_path</span><span class="p">))</span>
+        <span class="n">sitk</span><span class="o">.</span><span class="n">WriteImage</span><span class="p">(</span><span class="n">sitk_im</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">vol_path</span><span class="p">),</span> <span class="n">useCompression</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">elif</span> <span class="n">vol_path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.nii&quot;</span><span class="p">,</span> <span class="s2">&quot;.gz&quot;</span><span class="p">]:</span>
-        <span class="c1"># we are assuming nifti 2 here</span>
+        <span class="c1"># we are assuming nifti1 here</span>
         <span class="n">affine</span> <span class="o">=</span> <span class="n">generate_nii_affine</span><span class="p">(</span><span class="n">spacing</span><span class="p">)</span>
-        <span class="n">im</span> <span class="o">=</span> <span class="n">nib</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">image_array</span><span class="p">,</span> <span class="n">affine</span><span class="o">=</span><span class="n">affine</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">)</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">nib</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">image_array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">affine</span><span class="o">=</span><span class="n">affine</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">))</span>
+        <span class="n">im</span><span class="o">.</span><span class="n">set_data_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
 
         <span class="c1"># save the image</span>
         <span class="n">nib</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">vol_path</span><span class="p">))</span>
