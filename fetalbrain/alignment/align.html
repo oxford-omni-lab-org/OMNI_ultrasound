@@ -229,7 +229,7 @@
 <p>A single scan be aligned using the <a class="reference internal" href="#fetalbrain.alignment.align.align_scan" title="fetalbrain.alignment.align.align_scan"><code class="xref py py-func docutils literal notranslate"><span class="pre">align_scan()</span></code></a> function, which is a wrapper that loads the alignment model,
 prepares the scan into pytorch and computes and applies the alignment transformation. The alignment can be
 applied without scaling (i.e. preserving the size of the brain) or with scaling (i.e. scaling all images to the
-same reference brain size at 30GWs).</p>
+same reference brain size at 30GWs):</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dummy_scan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">align_scan</span><span class="p">(</span><span class="n">dummy_scan</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">to_atlas</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan_scaled</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">align_scan</span><span class="p">(</span><span class="n">dummy_scan</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -285,12 +285,12 @@ The function makes a prediction to go from the orientation to the bean coordinat
 an additional transformation to go to the atlas orientation. The bean to atlas transformation is only well defined
 for scaled image volumes, so the affine transformation is always generated including scaling.
 If scaling is set to False, the inverse scaling transform is applied after transformation to the atlas space.</p>
-<p>data flow (scale = True): scaled bean –&gt; scaled atlas space</p>
-<p>data flow (scale = False): scaled bean –&gt; scaled atlas space –&gt; unscaled atlas space</p>
+<p>data flow (scale = True): unscaled bean –&gt; unscaled atlas space -&gt; scaled atlas space</p>
+<p>data flow (scale = False): unscaled bean –&gt; unscaled atlas space</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> – tensor of size [B,1,H,W,D] containing the image(s) to align</p></li>
+<li><p><strong>image</strong> – tensor of size [B,1,H,W,D] containing the image(s) to align with pixel values between 0 and 255</p></li>
 <li><p><strong>model</strong> – the model used for inference</p></li>
 <li><p><strong>scale</strong> – whether to apply scaling, defaults to False</p></li>
 <li><p><strong>return_affine</strong> – whether to return the affine transformation, defaults to False</p></li>
@@ -322,7 +322,7 @@ If scaling is set to False, the inverse scaling transform is applied after trans
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>image</strong> – tensor of size [B,1,H,W,D] containing the image(s) to align</p></li>
+<li><p><strong>image</strong> – tensor of size [B,1,H,W,D] containing the image(s) to align between 0 and 255</p></li>
 <li><p><strong>model</strong> – the model used for inference</p></li>
 <li><p><strong>return_affine</strong> – whether to return the affine transformation, defaults to False</p></li>
 <li><p><strong>scale</strong> – whether to apply scaling, defaults to False</p></li>
@@ -365,13 +365,13 @@ If scaling is set to False, the inverse scaling transform is applied after trans
 <dt class="sig sig-object py" id="fetalbrain.alignment.align.prepare_scan">
 <span class="sig-prename descclassname"><span class="pre">fetalbrain.alignment.align.</span></span><span class="sig-name descname"><span class="pre">prepare_scan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../../_modules/fetalbrain/alignment/align.html#prepare_scan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.alignment.align.prepare_scan" title="Link to this definition">#</a></dt>
 <dd><p>Prepares the scan to be aligned with the alignment model.
-Normalises the scan between 0 and 1 and transforms the numpy array to pytorch.</p>
+Transforms the numpy array to pytorch and adds the batch and channel dimension.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>image</strong> – scan to be normalized and transformed</p>
+<dd class="field-odd"><p><strong>image</strong> – scan to be transformed</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>torch_imge</strong> – pytorch tensor of the scan with pixel values between 0 and 1</p>
+<dd class="field-even"><p><strong>torch_imge</strong> – pytorch tensor of the scan</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>

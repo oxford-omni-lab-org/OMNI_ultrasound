@@ -7,12 +7,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="quickstart.html" />
 <meta property="og:site_name" content="FetalBrain" />
-<meta property="og:description" content="Installation: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. The fetalbrain package will be hosted on pip, but can currently be us..." />
+<meta property="og:description" content="Installation: PyTorch: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. Git-LFS: It is also required to install git-lfs so that the ..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="/_images/social_previews/summary_quickstart_72ca0cb2.png" />
-<meta property="og:image:alt" content="Installation: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. The fetalbrain package will b..." />
-<meta name="description" content="Installation: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. The fetalbrain package will be hosted on pip, but can currently be us..." />
+<meta property="og:image" content="/_images/social_previews/summary_quickstart_a948627d.png" />
+<meta property="og:image:alt" content="Installation: PyTorch: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. Git-LFS: It is also..." />
+<meta name="description" content="Installation: PyTorch: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. Git-LFS: It is also required to install git-lfs so that the ..." />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="FetalBrain package" href="fetalbrain/index.html" /><link rel="prev" title="Welcome to FetalBrain’s documentation!" href="index.html" />
 
@@ -227,9 +227,22 @@
 <h1>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<p>Before installing the package, PyTorch needs to be installed which can be done
+<p><strong>PyTorch</strong>: Before installing the package, PyTorch needs to be installed which can be done
 using the instructions on <a class="reference external" href="https://pytorch.org/get-started/locally/">PyTorch</a>.</p>
-<p>The fetalbrain package will be hosted on pip, but can currently be used by cloning the
+<p><strong>Git-LFS</strong>: It is also required to install git-lfs so that the model weights are correctly pulled from the Github.
+Pulling the repo without git-lfs installed will work, but the model weight files will then not be
+downloaded correctly (throwing pytorch errors when loading them). More information on git-lfs can
+be found at <a class="reference external" href="https://git-lfs.com/">Git-lfs</a>.</p>
+<p>Git-lfs can be installed with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ yay install git-lfs # for arch linux
+$ brew install git-lfs # for mac
+</pre></div>
+</div>
+<p>followed by local installation with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git lfs install
+</pre></div>
+</div>
+<p><strong>FetalBrain package</strong>: The fetalbrain package will be hosted on pip, but can currently be used by cloning the
 repository locally with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone git@github.com:lindehesse/OMNI_ultrasound.git
 </pre></div>

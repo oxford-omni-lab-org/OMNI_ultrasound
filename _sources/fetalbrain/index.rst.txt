@@ -1,5 +1,5 @@
 FetalBrain package
-===========
+==================
 
 Subpackages
 -----------

@@ -211,13 +211,12 @@
         </div>
         <article role="main">
           <h1>Source code for fetalbrain.alignment.align</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">This module contains the main functions for aligning the scans.</span>
+<span></span><span class="sd">&quot;&quot;&quot;This module contains the main functions for aligning the scans.</span>
 
 <span class="sd">A single scan be aligned using the :func:`align_scan` function, which is a wrapper that loads the alignment model,</span>
 <span class="sd">prepares the scan into pytorch and computes and applies the alignment transformation. The alignment can be</span>
 <span class="sd">applied without scaling (i.e. preserving the size of the brain) or with scaling (i.e. scaling all images to the</span>
-<span class="sd">same reference brain size at 30GWs).</span>
+<span class="sd">same reference brain size at 30GWs):</span>
 <span class="sd">    &gt;&gt;&gt; dummy_scan = np.random.rand(160, 160, 160)</span>
 <span class="sd">    &gt;&gt;&gt; aligned_scan, params = align_scan(dummy_scan, scale=False, to_atlas=True)</span>
 <span class="sd">    &gt;&gt;&gt; aligned_scan_scaled, params = align_scan(dummy_scan, scale=True)</span>
@@ -235,9 +234,8 @@
 <span class="sd">to speed up analysis. More advanced examples can be found in the Example Gallery.</span>
 
 <span class="sd">Module functions</span>
-<span class="sd">---------</span>
+<span class="sd">-----------------</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
@@ -254,7 +252,7 @@
 <div class="viewcode-block" id="load_alignment_model">
 <a class="viewcode-back" href="../../../fetalbrain/alignment/align.html#fetalbrain.alignment.align.load_alignment_model">[docs]</a>
 <span class="k">def</span> <span class="nf">load_alignment_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AlignmentModel</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Load the fBAN alignment model</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the fBAN alignment model</span>
 <span class="sd">    Args:</span>
 <span class="sd">        model_path: path to the trained model, defaults to None (uses the default model)</span>
 
@@ -286,12 +284,12 @@
 <span class="nd">@typechecked</span>
 <span class="k">def</span> <span class="nf">prepare_scan</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepares the scan to be aligned with the alignment model.</span>
-<span class="sd">    Normalises the scan between 0 and 1 and transforms the numpy array to pytorch.</span>
+<span class="sd">    Transforms the numpy array to pytorch and adds the batch and channel dimension.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        image: scan to be normalized and transformed</span>
+<span class="sd">        image: scan to be transformed</span>
 <span class="sd">    Returns:</span>
-<span class="sd">        torch_imge: pytorch tensor of the scan with pixel values between 0 and 1</span>
+<span class="sd">        torch_imge: pytorch tensor of the scan</span>
 
 <span class="sd">    Example:</span>
 <span class="sd">        &gt;&gt;&gt; dummy_scan = np.random.rand(160, 160, 160)</span>
@@ -299,12 +297,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">torch_image</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-
-    <span class="c1"># normalise if needed</span>
-    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">torch_image</span> <span class="o">-=</span> <span class="n">torch_image</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
-        <span class="n">torch_image</span> <span class="o">/=</span> <span class="n">torch_image</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-
     <span class="n">torch_image</span> <span class="o">=</span> <span class="n">torch_image</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
     <span class="n">torch_image</span> <span class="o">=</span> <span class="n">torch_image</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
 
@@ -335,7 +327,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Aligns the scan to the bean coordinate system using the fban model.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        image:  tensor of size [B,1,H,W,D] containing the image(s) to align</span>
+<span class="sd">        image:  tensor of size [B,1,H,W,D] containing the image(s) to align between 0 and 255</span>
 <span class="sd">        model: the model used for inference</span>
 <span class="sd">        return_affine: whether to return the affine transformation, defaults to False</span>
 <span class="sd">        scale: whether to apply scaling, defaults to False</span>
@@ -372,6 +364,9 @@
     <span class="n">image_aligned</span> <span class="o">=</span> <span class="n">apply_affine</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">transform_affine</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">image_aligned</span><span class="p">)</span> <span class="ow">is</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
 
+    <span class="c1"># interpolation sometimes introduces values outside range</span>
+    <span class="n">image_aligned</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">image_aligned</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+
     <span class="c1"># make dict from parameters</span>
     <span class="n">param_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;translation&quot;</span><span class="p">:</span> <span class="n">translation</span><span class="p">,</span> <span class="s2">&quot;rotation&quot;</span><span class="p">:</span> <span class="n">rotation</span><span class="p">,</span> <span class="s2">&quot;scaling&quot;</span><span class="p">:</span> <span class="n">scaling</span><span class="p">}</span>
 
@@ -394,11 +389,11 @@
 <span class="sd">    for scaled image volumes, so the affine transformation is always generated including scaling.</span>
 <span class="sd">    If scaling is set to False, the inverse scaling transform is applied after transformation to the atlas space.</span>
 
-<span class="sd">    data flow (scale = True): scaled bean --&gt; scaled atlas space \n</span>
-<span class="sd">    data flow (scale = False): scaled bean --&gt; scaled atlas space --&gt; unscaled atlas space</span>
+<span class="sd">    data flow (scale = True): unscaled bean --&gt; unscaled atlas space -&gt; scaled atlas space \n</span>
+<span class="sd">    data flow (scale = False): unscaled bean --&gt; unscaled atlas space</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        image: tensor of size [B,1,H,W,D] containing the image(s) to align</span>
+<span class="sd">        image: tensor of size [B,1,H,W,D] containing the image(s) to align with pixel values between 0 and 255</span>
 <span class="sd">        model: the model used for inference</span>
 <span class="sd">        scale: whether to apply scaling, defaults to False</span>
 <span class="sd">        return_affine: whether to return the affine transformation, defaults to False</span>
@@ -416,13 +411,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
     <span class="n">translation</span><span class="p">,</span> <span class="n">rotation</span><span class="p">,</span> <span class="n">scaling</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 
-    <span class="c1"># generate affine transform with scaling</span>
-    <span class="n">transform_affine</span> <span class="o">=</span> <span class="n">generate_affine</span><span class="p">(</span>
+    <span class="c1"># generate affine transform without scaling</span>
+    <span class="n">transform_affine_noscale</span> <span class="o">=</span> <span class="n">generate_affine</span><span class="p">(</span>
         <span class="n">parameter_translation</span><span class="o">=</span><span class="n">translation</span> <span class="o">*</span> <span class="mi">160</span><span class="p">,</span>
         <span class="n">parameter_rotation</span><span class="o">=</span><span class="n">rotation</span><span class="p">,</span>
-        <span class="n">parameter_scaling</span><span class="o">=</span><span class="n">scaling</span><span class="p">,</span>
+        <span class="n">parameter_scaling</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]]),</span>
         <span class="n">type_rotation</span><span class="o">=</span><span class="s2">&quot;quaternions&quot;</span><span class="p">,</span>
         <span class="n">transform_order</span><span class="o">=</span><span class="s2">&quot;srt&quot;</span><span class="p">,</span>
     <span class="p">)</span>
@@ -431,25 +427,26 @@
     <span class="n">to_atlas_affine</span> <span class="o">=</span> <span class="n">_get_transform_to_atlasspace</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">scale</span><span class="p">:</span>
-        <span class="c1"># construct scaling transform</span>
+        <span class="n">total_transform</span> <span class="o">=</span> <span class="n">to_atlas_affine</span> <span class="o">@</span> <span class="n">transform_affine_noscale</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># generate scaling transform to apply after</span>
         <span class="n">scaling_affine</span> <span class="o">=</span> <span class="n">scaling</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="n">scaling_affine</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
-        <span class="c1"># scaling + alignment  -&gt; to_atlas -&gt; undo scaling</span>
-        <span class="n">total_transform</span> <span class="o">=</span> <span class="n">scaling_affine</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span> <span class="o">@</span> <span class="n">to_atlas_affine</span> <span class="o">@</span> <span class="n">transform_affine</span>
-
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># scaling + alignment  -&gt; to_atlas -&gt; undo scaling</span>
-        <span class="n">total_transform</span> <span class="o">=</span> <span class="n">to_atlas_affine</span> <span class="o">@</span> <span class="n">transform_affine</span>
+        <span class="c1"># alignment -&gt; to_atlas -&gt; scaling</span>
+        <span class="n">total_transform</span> <span class="o">=</span> <span class="n">scaling_affine</span> <span class="o">@</span> <span class="n">to_atlas_affine</span> <span class="o">@</span> <span class="n">transform_affine_noscale</span>
 
     <span class="c1"># apply whole transformation in one</span>
     <span class="n">aligned_to_atlas_scan</span> <span class="o">=</span> <span class="n">apply_affine</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">total_transform</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">aligned_to_atlas_scan</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
 
+    <span class="c1"># interpolation sometimes introduces values outside range</span>
+    <span class="n">aligned_to_atlas_scan</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">aligned_to_atlas_scan</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+
     <span class="n">param_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;translation&quot;</span><span class="p">:</span> <span class="n">translation</span><span class="p">,</span> <span class="s2">&quot;rotation&quot;</span><span class="p">:</span> <span class="n">rotation</span><span class="p">,</span> <span class="s2">&quot;scaling&quot;</span><span class="p">:</span> <span class="n">scaling</span><span class="p">}</span>
 
     <span class="k">if</span> <span class="n">return_affine</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">aligned_to_atlas_scan</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">,</span> <span class="n">transform_affine</span>
+        <span class="k">return</span> <span class="n">aligned_to_atlas_scan</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">,</span> <span class="n">total_transform</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">aligned_to_atlas_scan</span><span class="p">,</span> <span class="n">param_dict</span></div>
 
@@ -536,39 +533,46 @@
 
 
 
-<span class="k">def</span> <span class="nf">_get_atlastransform</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;This generates the affine transformation matrix to go from the bean space to the atlas space</span>
+<span class="k">def</span> <span class="nf">_get_atlastransform_itksnap</span><span class="p">(</span><span class="n">pixel_spacing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;These transformation parameters were obtained by registering a set of 20 bean aligned images (no scale)</span>
+<span class="sd">        to the same images aligned to the atlas space in ITK-SNAP. There was no clear pattern in the</span>
+<span class="sd">        parameters with respect to GA/skull size, so a median was taken which can be used to align the</span>
+<span class="sd">        unscaled BEAN images to the atlas space.</span>
+
+<span class="sd">        In ITK-SNAP the parameters are given in degree and mm, so these have to be transformed to</span>
+<span class="sd">        pixels and radians to be used with the transformation functions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pixel_spacing: pixel spacing of the images, defaults to 0.6</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        atlas_transform: tensor of size (1, 4, 4)</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; atlas_transform = _get_atlastransform()</span>
+<span class="sd">        &gt;&gt;&gt; atlas_transform = _get_atlastransform_itksnap()</span>
 <span class="sd">        &gt;&gt;&gt; assert atlas_transform.shape == (1,4,4)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eu_params_itk</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.75</span><span class="p">,</span> <span class="mf">6.78</span><span class="p">,</span> <span class="mf">0.69</span><span class="p">]</span>  <span class="c1"># in degree</span>
+    <span class="n">tr_params_itk</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">5.62</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.306</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.451</span><span class="p">]</span>  <span class="c1"># in mm</span>
 
-    <span class="n">params_to_atlas</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">BEAN_TO_ATLAS</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">))</span>
-    <span class="n">eu_params</span> <span class="o">=</span> <span class="n">params_to_atlas</span><span class="p">[</span><span class="s2">&quot;eu_param&quot;</span><span class="p">]</span>
-    <span class="n">tr_params</span> <span class="o">=</span> <span class="n">params_to_atlas</span><span class="p">[</span><span class="s2">&quot;tr_param&quot;</span><span class="p">]</span>
+    <span class="c1"># convert the parameters to radians and mm</span>
+    <span class="n">eu_params</span> <span class="o">=</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">eu_params_itk</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span>  <span class="c1"># in rad</span>
+    <span class="n">tr_params</span> <span class="o">=</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">tr_params_itk</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">pixel_spacing</span>  <span class="c1"># in mm</span>
 
-    <span class="n">eu_param_to_atlas</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">eu_params</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">tr_param_to_atlas</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">tr_params</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># the scaling parameters (unchanged)</span>
     <span class="n">sc_param_to_atlas</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="c1"># the negative, likely going from left to right handed coordinate system</span>
+    <span class="c1"># the type_rotation and transform_order has been set to exactly match ITK-SNAP output</span>
     <span class="n">atlas_transform</span> <span class="o">=</span> <span class="n">generate_affine</span><span class="p">(</span>
-        <span class="n">tr_param_to_atlas</span><span class="p">,</span> <span class="o">-</span><span class="n">eu_param_to_atlas</span><span class="p">,</span> <span class="n">sc_param_to_atlas</span><span class="p">,</span> <span class="n">type_rotation</span><span class="o">=</span><span class="s2">&quot;euler_zyx&quot;</span><span class="p">,</span> <span class="n">transform_order</span><span class="o">=</span><span class="s2">&quot;trs&quot;</span>
+        <span class="n">tr_params</span><span class="p">,</span> <span class="n">eu_params</span><span class="p">,</span> <span class="n">sc_param_to_atlas</span><span class="p">,</span> <span class="n">type_rotation</span><span class="o">=</span><span class="s2">&quot;euler_xyz&quot;</span><span class="p">,</span> <span class="n">transform_order</span><span class="o">=</span><span class="s2">&quot;rts&quot;</span>
     <span class="p">)</span>
-
-    <span class="c1"># scale the scaling values to -80 - 80 (instead of -1 - 1 which was used in older versions)</span>
-    <span class="n">atlas_transform</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">atlas_transform</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="mi">80</span>
-
     <span class="k">return</span> <span class="n">atlas_transform</span>
 
 
 <span class="k">def</span> <span class="nf">_get_transform_to_atlasspace</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;This incorporates some permutations (implemented as rotation matrices) with the atlas transformation to go</span>
-<span class="sd">    directly from aligned images in bean orientation to atlas space</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This function computes the total transform to go from BEAN aligned to the atlas space.</span>
+<span class="sd">    It first permutes the axis to match the planes of the atlas space, and then applies a</span>
+<span class="sd">    small affine transformation that translates + rotates the images to the atlas space.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        total_transform: transformation matrix of size [1,4,4]</span>
@@ -578,19 +582,15 @@
 <span class="sd">        &gt;&gt;&gt; assert atlas_transform.shape == (1,4,4)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">atlas_transform</span> <span class="o">=</span> <span class="n">_get_atlastransform</span><span class="p">()</span>
+    <span class="n">atlas_transform</span> <span class="o">=</span> <span class="n">_get_atlastransform_itksnap</span><span class="p">()</span>
 
     <span class="c1"># these are permutations so that the transformation matrices align with the images</span>
-    <span class="n">first_perm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span>
+    <span class="n">first_perm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span>
         <span class="mi">0</span>
     <span class="p">)</span>
-    <span class="c1"># the second flips the hemisphere, this one is not strictly required, check for consistency in data</span>
-    <span class="n">second_perm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
-        <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="c1"># obtain the complete transformation</span>
-    <span class="n">total_transform</span> <span class="o">=</span> <span class="n">second_perm</span> <span class="o">@</span> <span class="n">atlas_transform</span> <span class="o">@</span> <span class="n">first_perm</span>
+    <span class="n">total_transform</span> <span class="o">=</span> <span class="n">atlas_transform</span> <span class="o">@</span> <span class="n">first_perm</span>
 
     <span class="k">return</span> <span class="n">total_transform</span>
 
@@ -598,7 +598,7 @@
 <div class="viewcode-block" id="align_scan">
 <a class="viewcode-back" href="../../../fetalbrain/alignment/align.html#fetalbrain.alignment.align.align_scan">[docs]</a>
 <span class="k">def</span> <span class="nf">align_scan</span><span class="p">(</span><span class="n">scan</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">to_atlas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; align a scan to a reference coordinate system</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;align a scan to a reference coordinate system</span>
 
 <span class="sd">    This function aligns the input scan to either the atlas or bean coordinate system, with the</span>
 <span class="sd">    atlas space as default. This function is a wrapper that loads the alignment model, prepares</span>

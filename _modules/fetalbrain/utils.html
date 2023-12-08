@@ -216,6 +216,15 @@
 <span class="sd">images when using the packages in this repository to ensure consistency. For example, niibabel and simpleITK read</span>
 <span class="sd">in image differently, which can cause problems when using these together. The read/write functions in this module</span>
 <span class="sd">have all been adapated so that they are consistent with each other.</span>
+
+<span class="sd">For reading .nii / .nii.gz / .mha use:</span>
+<span class="sd">    &gt;&gt;&gt; image, spacing = read_image(vol_path)</span>
+
+<span class="sd">For reading matlab image files use:</span>
+<span class="sd">    &gt;&gt;&gt; image, spacing = read_matlab_image(vol_path)</span>
+
+<span class="sd">For writing .nii / .nii.gz / .mha use:</span>
+<span class="sd">    &gt;&gt;&gt; write_image(vol_path, image, spacing)</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -235,7 +244,7 @@
 <span class="k">def</span> <span class="nf">_read_mha_image</span><span class="p">(</span>
     <span class="n">vol_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">return_info</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Reads an sitk image, and returns the numpy array and optionally the spacing</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reads an sitk image, and returns the numpy array and optionally the spacing</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        vol_path: path to read the image from</span>
@@ -266,7 +275,7 @@
 <span class="k">def</span> <span class="nf">_read_nii_image</span><span class="p">(</span>
     <span class="n">vol_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">return_info</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Reads an nifti image, and returns the numpy array and optionally the spacing</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reads an nifti image, and returns the numpy array and optionally the spacing</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        vol_path: path to read the image from</span>
@@ -293,7 +302,7 @@
 <div class="viewcode-block" id="read_image">
 <a class="viewcode-back" href="../../fetalbrain/utils.html#fetalbrain.utils.read_image">[docs]</a>
 <span class="nd">@typechecked</span>
-<span class="k">def</span> <span class="nf">read_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="k">def</span> <span class="nf">read_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Reads in an image, and returns the numpy array and spacing</span>
 
 <span class="sd">    Args:</span>
@@ -309,6 +318,9 @@
 <span class="sd">    Example:</span>
 <span class="sd">        &gt;&gt;&gt; example_scan, spacing = read_image(TEST_IMAGE_PATH)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vol_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">vol_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">vol_path</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">vol_path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.mha&quot;</span><span class="p">:</span>
         <span class="n">nii_array</span><span class="p">,</span> <span class="n">spacing</span> <span class="o">=</span> <span class="n">_read_mha_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">,</span> <span class="n">return_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -322,10 +334,37 @@
 
 
 
+<div class="viewcode-block" id="read_matlab_image">
+<a class="viewcode-back" href="../../fetalbrain/utils.html#fetalbrain.utils.read_matlab_image">[docs]</a>
+<span class="k">def</span> <span class="nf">read_matlab_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; This function can be used to read the matlab image file from the longitudinal atlas. To use this</span>
+<span class="sd">    function the package needs to be install with the [matlab] addition (or this can be manually installed</span>
+<span class="sd">    with pip install scipy). As there is no spacing information in the matlab files, this is hardcode</span>
+<span class="sd">    to (0.6, 0.6, 0.6).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vol_path: path to the matlab image</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        image_data: np.ndarray of the image</span>
+<span class="sd">        spacing: spacing of the image (0.6, 0.6, 0.6)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">scipy.io</span> <span class="kn">import</span> <span class="n">loadmat</span>
+
+    <span class="n">mat_img</span> <span class="o">=</span> <span class="n">loadmat</span><span class="p">(</span><span class="n">vol_path</span><span class="p">)</span>
+    <span class="n">img_data</span> <span class="o">=</span> <span class="n">mat_img</span><span class="p">[</span><span class="s2">&quot;img_brain&quot;</span><span class="p">][:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># hardcoded spacing for matlab files</span>
+    <span class="n">spacing</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">img_data</span><span class="p">,</span> <span class="n">spacing</span></div>
+
+
+
 <div class="viewcode-block" id="generate_nii_affine">
 <a class="viewcode-back" href="../../fetalbrain/utils.html#fetalbrain.utils.generate_nii_affine">[docs]</a>
 <span class="k">def</span> <span class="nf">generate_nii_affine</span><span class="p">(</span><span class="n">spacing</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Generate the affine matrix from the spacing.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the affine matrix from the spacing.</span>
 <span class="sd">    The negative spacing for the first two dimensions is to ensure consistency with the mha format.</span>
 
 <span class="sd">    Args:</span>
@@ -350,7 +389,9 @@
 <div class="viewcode-block" id="write_image">
 <a class="viewcode-back" href="../../fetalbrain/utils.html#fetalbrain.utils.write_image">[docs]</a>
 <span class="nd">@typechecked</span>
-<span class="k">def</span> <span class="nf">write_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">image_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">spacing</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">write_image</span><span class="p">(</span>
+    <span class="n">vol_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">image_array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">spacing</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Saves a numpy array as an nifti or mha image, the type is determined by the file extension</span>
 
 <span class="sd">    Args:</span>
@@ -362,6 +403,9 @@
 <span class="sd">        &gt;&gt;&gt; test_image =  np.random.rand(160, 160, 160)</span>
 <span class="sd">        &gt;&gt;&gt; write_image(TEST_SAVEPATH_MHA, test_image)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vol_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">vol_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">vol_path</span><span class="p">)</span>
 
     <span class="c1"># check inputs</span>
     <span class="k">assert</span> <span class="mi">2</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;im_array must be 2D-4D&quot;</span>
