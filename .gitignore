@@ -28,6 +28,7 @@ docs/build/
 !Tests/testdata/*.nii.gz
 !Tests/testdata/alignment/*.png
 !Tests/testdata/*.mha
+!Tests/testdata/subc_segmentation/*.nii.gz
 
 # model weights + config (might want to change this at some point to include them)
 *.json
