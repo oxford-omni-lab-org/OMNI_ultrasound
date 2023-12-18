@@ -7,12 +7,12 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="quickstart.html" />
 <meta property="og:site_name" content="FetalBrain" />
-<meta property="og:description" content="Installation: PyTorch: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. Git-LFS: It is also required to install git-lfs so that the ..." />
+<meta property="og:description" content="Installation: PyTorch: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. FetalBrain package: The fetalbrain package will be hosted on..." />
 <meta property="og:image:width" content="1146" />
 <meta property="og:image:height" content="600" />
-<meta property="og:image" content="/_images/social_previews/summary_quickstart_a948627d.png" />
-<meta property="og:image:alt" content="Installation: PyTorch: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. Git-LFS: It is also..." />
-<meta name="description" content="Installation: PyTorch: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. Git-LFS: It is also required to install git-lfs so that the ..." />
+<meta property="og:image" content="/_images/social_previews/summary_quickstart_15106963.png" />
+<meta property="og:image:alt" content="Installation: PyTorch: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. FetalBrain package:..." />
+<meta name="description" content="Installation: PyTorch: Before installing the package, PyTorch needs to be installed which can be done using the instructions on PyTorch. FetalBrain package: The fetalbrain package will be hosted on..." />
 <meta name="twitter:card" content="summary_large_image" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="FetalBrain package" href="fetalbrain/index.html" /><link rel="prev" title="Welcome to FetalBrain’s documentation!" href="index.html" />
 
@@ -229,19 +229,6 @@
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
 <p><strong>PyTorch</strong>: Before installing the package, PyTorch needs to be installed which can be done
 using the instructions on <a class="reference external" href="https://pytorch.org/get-started/locally/">PyTorch</a>.</p>
-<p><strong>Git-LFS</strong>: It is also required to install git-lfs so that the model weights are correctly pulled from the Github.
-Pulling the repo without git-lfs installed will work, but the model weight files will then not be
-downloaded correctly (throwing pytorch errors when loading them). More information on git-lfs can
-be found at <a class="reference external" href="https://git-lfs.com/">Git-lfs</a>.</p>
-<p>Git-lfs can be installed with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ yay install git-lfs # for arch linux
-$ brew install git-lfs # for mac
-</pre></div>
-</div>
-<p>followed by local installation with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git lfs install
-</pre></div>
-</div>
 <p><strong>FetalBrain package</strong>: The fetalbrain package will be hosted on pip, but can currently be used by cloning the
 repository locally with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone git@github.com:oxford-omni-lab-org/OMNI_ultrasound.git
@@ -249,11 +236,20 @@ repository locally with:</p>
 </div>
 <section id="user-installation">
 <h3>User installation<a class="headerlink" href="#user-installation" title="Link to this heading">#</a></h3>
-<p>The package can then be installed from the root of the repository with:</p>
+<p>The package can then be installed from the root of the repository with (This will install the package and all required dependencies):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install .
 </pre></div>
 </div>
-<p>This will install the package and all required dependencies. After installation, the
+<p>Then download the model weights using the provided command line downloader (this only downloads the model weights if that folder
+does not exists yet):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ftlbr_download_modelweights
+</pre></div>
+</div>
+<p>To overwrite any existing downloads use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ftlbr_download_modelweights --force
+</pre></div>
+</div>
+<p>After installation and download of the model weights, the
 package can simply be used in Python with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">fetalbrain</span>
 </pre></div>
@@ -269,6 +265,10 @@ package can simply be used in Python with:</p>
 are immediately available without having to reinstall the package. The [all] option
 installs all dependencies needed for development, testing, plotting and documentation
 (as specified in the setup.cfg file).</p>
+<p>Also run the downloader with the additional argument –testdata to download the test data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ftlbr_download_modelweights --testdata
+</pre></div>
+</div>
 </section>
 </section>
 <section id="minimal-example">
