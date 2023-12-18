@@ -3,6 +3,7 @@ import torch.nn as nn
 from collections import OrderedDict
 from typing import Union
 from torch.nn import ConvTranspose3d, ConvTranspose2d
+from torch.nn import Conv2d, Conv3d
 
 
 class ConvBlock(nn.Module):
@@ -194,50 +195,55 @@ class DecoderBranch(nn.Module):
         raise ValueError("dec_depth must be less than or equal to net_depth")
 
 
-# class UNet_MW(nn.Module):
-#     """
-#     My U-Net
-#     inputs:
-#     in_channels = number of channels in the input
-#     out_channels = number of output channel
-#     features = initial numnber of features
-#     dec_depth = the depth that the output comes from (1 back to the top)
-#     net__depth = how deep the network is
-#     """
+class UNet_MW(nn.Module):
+    """
+    My U-Net
+    inputs:
+    in_channels = number of channels in the input
+    out_channels = number of output channel
+    features = initial numnber of features
+    dec_depth = the depth that the output comes from (1 back to the top)
+    net__depth = how deep the network is
+    """
 
-#     def __init__(self, params):
-#         """
-#         Set up the U-Net
-#         """
+    def __init__(self) -> None:
+        """
+        Set up the U-Net
+        """
 
-#         super(UNet_MW, self).__init__()
-#         in_channels = params.network_params.in_chan
-#         out_channels = params.network_params.out_chan
-#         features = params.network_params.fi
-#         net_depth = params.network_params.net_depth
-#         dropout = params.network_params.dropout
-#         dec_depth = params.network.dec_depth
-#         ndims = params.dataset.ndims
+        super(UNet_MW, self).__init__()
+        in_channels = 1
+        out_channels = 1
+        features = 6
+        net_depth = 4
+        dropout = True
+        dec_depth = 1
+        ndims = 3
+        self.output_activation = "sigmoid"
 
-#         if ndims == 3:
-#             from torch.nn import Conv3d as FConv
-#         elif ndims == 2:
-#             from torch.nn import Conv2d as FConv
+        # --------- 1. Encoder:
+        self.enc = EncoderBranch(in_channels, features, ndims, net_depth, dropout)
+        # --------- 2. Bottleneck:
+        self.bottleneck = BottleNeck(features, ndims, net_depth, dropout)
+        # --------- 3. Decoder:
+        self.dec = DecoderBranch(features, ndims, net_depth, dec_depth, dropout)
 
-#         # --------- 1. Encoder:
-#         self.enc = EncoderBranch(in_channels, features, ndims, net_depth, dropout)
-#         # --------- 2. Bottleneck:
-#         self.bottleneck = BottleNeck(features, ndims, net_depth, dropout)
-#         # --------- 3. Decoder:
-#         self.dec = DecoderBranch(features, ndims, net_depth, dec_depth, dropout)
+        self.conv: Union[Conv2d, Conv3d]
+        if ndims == 3:
+            self.conv = Conv3d(in_channels=features, out_channels=out_channels, kernel_size=1)
+        elif ndims == 2:
+            self.conv = Conv2d(in_channels=features, out_channels=out_channels, kernel_size=1)
+        else:
+            raise ValueError("ndims must be 2 or 3")
 
-#         self.conv = FConv(in_channels=features, out_channels=out_channels, kernel_size=1)  # Output generator
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
 
-#     def forward(self, x, _):
-#         # x = inputs[:,0]
-#         enc_outputs = self.enc(x)
-#         BottleNeck = self.bottleneck(enc_outputs[-1])
-#         dec_output = self.dec(BottleNeck, enc_outputs)
-#         cnn_output = self.conv(dec_output)
+        enc_outputs = self.enc(x)
+        BottleNeck = self.bottleneck(enc_outputs[-1])
+        dec_output = self.dec(BottleNeck, enc_outputs)
+        cnn_output = self.conv(dec_output)
 
-#         return torch.softmax(cnn_output, dim=1), 1
+        if self.output_activation == "sigmoid":
+            return torch.sigmoid(cnn_output)
+        else:
+            raise NotImplementedError("Only sigmoid activation is currently supported")

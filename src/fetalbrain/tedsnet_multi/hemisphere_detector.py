@@ -12,7 +12,7 @@ def load_sidedetector_model(model_path: Optional[Path] = None) -> torch.nn.Modul
         model_path: path to the trained model weights. Defaults to None.
 
     Returns:
-        ResNet model with trained weights loaded
+        model: ResNet model with trained weights loaded
 
     Example:
         >>> model = load_sidedetector_model()
