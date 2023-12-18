@@ -1,4 +1,4 @@
-"""This module contains the main functions for aligning the scans.  
+"""This module contains the main functions for aligning the scans.
 
 A single scan be aligned using the :func:`align_scan` function, which is a wrapper that loads the alignment model,
 prepares the scan into pytorch and computes and applies the alignment transformation. The alignment can be

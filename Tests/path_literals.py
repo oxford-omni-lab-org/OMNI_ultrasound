@@ -8,5 +8,5 @@ TEMP_SAVEPATH = BASE_PATH / "temp"
 
 TEST_ALIGNMENT_PATH = Path("Tests/testdata/alignment")
 TEST_SEGM_PATH = Path("Tests/testdata/subc_segmentation")
-
+TEST_MULTITEDS_PATH = Path("Tests/testdata/tedsmulti")
 

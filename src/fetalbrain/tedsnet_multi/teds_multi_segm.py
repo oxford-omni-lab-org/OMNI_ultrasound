@@ -38,18 +38,20 @@ def load_tedsmulti_model(model_path: Optional[Path] = None) -> TEDS_Net:
     return model
 
 
-def get_prior_shape_sa(sd: Literal["l", "r"]) -> torch.Tensor:
+def get_prior_shape_sa(sd: Literal[0, 1]) -> torch.Tensor:
     """Get the prior paired with each week and side
 
     Args:
-        sd: which side to get the prior shape for, either 'r' or 'l'
+        sd: which side to get the prior shape for, either 0 or 1
 
     Returns:
         prior_shape: tensor containing the prior shape
 
     Example:
-        >>> prior_shape = get_prior_shape_sa('l')
+        >>> prior_shape = get_prior_shape_sa(0)
     """
+
+    assert sd in [0, 1], "sd should be either 0 or 1"
 
     # Load in shape prior
     pshape, _ = read_image(PRIOR_SHAPE_PATH)
@@ -59,10 +61,9 @@ def get_prior_shape_sa(sd: Literal["l", "r"]) -> torch.Tensor:
 
     # set the invisible hemisphere to zero, except for the cavum (because it is around the midplane)
     cavum = np.where(pshape_per == 2, 1, 0)
-    if sd == "l":
+    if sd == 0:
         pshape_per[:, 80:160, :] = 0
-
-    elif sd == "r":
+    elif sd == 1:
         pshape_per[:, 0:80, :] = 0
 
     pshape_per = np.where(cavum == 1, 2, pshape_per)
@@ -78,12 +79,14 @@ def get_prior_shape_sa(sd: Literal["l", "r"]) -> torch.Tensor:
 
 def generate_multiclass_prediction(prediction: torch.Tensor) -> np.ndarray:
     """Convert the TEDS-multiclass output into a multiclass segmentation mask
-        Note: I don't think this works for batches atm
+
+    Note: I don't think this works for batches atm
     Args:
         prediction: prediction from TEDS model of size [B, 10, H, W, D]
 
     Returns:
         combined_pred: multiclass segmentation mask of size [H, W, D]
+
     """
     # due to tedsnets design we approach is as binary for each channel and threshold at 0.4
     pred = (prediction > 0.4).int().squeeze().cpu().numpy()
@@ -98,14 +101,14 @@ def generate_multiclass_prediction(prediction: torch.Tensor) -> np.ndarray:
 
 
 def segment_tedsall(
-    aligned_scan: torch.Tensor, segm_model: TEDS_Net, side: Literal["r", "l"] = "r"
+    aligned_scan: torch.Tensor, segm_model: TEDS_Net, side: Literal[0, 1] = 0
 ) -> tuple[np.ndarray, dict]:
     """_summary_
 
     Args:
         aligned_scan: _description_
         segm_model: _description_
-        side: _description_. Defaults to "r".
+        side: _description_. Defaults to "0".
 
     Returns:
         _description_
@@ -155,10 +158,5 @@ def segment_scan_tedsall(aligned_scan: torch.Tensor) -> tuple[np.ndarray, dict]:
     side_model = load_sidedetector_model()
     side, _ = detect_side(aligned_scan, side_model)
 
-    if side.item() == 0:
-        side = "r"
-    else:
-        side = "l"
-
-    multiclass, keys = segment_tedsall(aligned_scan, segm_model, side="r")
+    multiclass, keys = segment_tedsall(aligned_scan, segm_model, side=side)
     return multiclass.squeeze(), keys

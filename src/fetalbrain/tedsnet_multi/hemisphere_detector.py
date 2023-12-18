@@ -1,11 +1,8 @@
 import torch
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Literal
 import numpy as np
 from ..model_paths import SIDE_DETECTOR_MODEL_PATH
-# from fetalbrain.alignment.align import _get_transform_to_atlasspace
-
-
 
 
 def load_sidedetector_model(model_path: Optional[Path] = None) -> torch.nn.Module:
@@ -34,18 +31,21 @@ def load_sidedetector_model(model_path: Optional[Path] = None) -> torch.nn.Modul
     return model
 
 
-def detect_side(aligned_scan: torch.Tensor, model: torch.nn.Module, from_atlas: bool = True) -> int:
+def detect_side(
+    aligned_scan: torch.Tensor, model: torch.nn.Module, from_atlas: bool = True
+) -> tuple[Literal[0, 1], float]:
     """_summary_
 
     Takes as input a scan aligned (no scaling) to the atlas or bean coordinate system.
 
 
     Args:
-        aligned_scan: _description_
+        aligned_scan: [1,1, H, W, D]
         model: _description_
 
     Returns:
-        pred:
+        pred: 0 for left, 1 for right
+        probs: probability of the prediction
 
     """
     if torch.max(aligned_scan) <= 1:
@@ -53,16 +53,13 @@ def detect_side(aligned_scan: torch.Tensor, model: torch.nn.Module, from_atlas: 
 
     # this is the orientation it was trained on by Maddy
     if not from_atlas:
-        midslice = aligned_scan[:, 0, :, :, 79:82]
+        midslice = aligned_scan[:, 0, :, :, 79:82].permute(0, 3, 2, 1)
     # this is equivalent to this in the atlas orientation
     else:
-        rotated = torch.permute(aligned_scan, (0, 1, 3, 2, 4))
-        midslice = rotated[:, 0, :, :, 85:88]
-
-    # bring channel dimension forward
-    midslice = midslice.permute(0, 3, 1, 2)
+        midslice = aligned_scan[:, 0, :, :, 85:88].permute(0, 3, 1, 2)
+        midslice = torch.flip(midslice, dims=[3])
 
     outputs = torch.sigmoid(model(midslice)).detach().cpu().numpy()
     pred = np.argmax(outputs)
 
-    return pred, outputs[:, pred]
+    return pred, outputs[:, pred]  # type: ignore
