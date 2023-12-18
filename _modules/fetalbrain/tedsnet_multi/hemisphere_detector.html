@@ -213,12 +213,9 @@
           <h1>Source code for fetalbrain.tedsnet_multi.hemisphere_detector</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Literal</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">..model_paths</span> <span class="kn">import</span> <span class="n">SIDE_DETECTOR_MODEL_PATH</span>
-<span class="c1"># from fetalbrain.alignment.align import _get_transform_to_atlasspace</span>
-
-
 
 
 <div class="viewcode-block" id="load_sidedetector_model">
@@ -252,18 +249,21 @@
 
 <div class="viewcode-block" id="detect_side">
 <a class="viewcode-back" href="../../../fetalbrain/tedsnet_multi/hemisphere_detector.html#fetalbrain.tedsnet_multi.hemisphere_detector.detect_side">[docs]</a>
-<span class="k">def</span> <span class="nf">detect_side</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">from_atlas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">detect_side</span><span class="p">(</span>
+    <span class="n">aligned_scan</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">from_atlas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;_summary_</span>
 
 <span class="sd">    Takes as input a scan aligned (no scaling) to the atlas or bean coordinate system.</span>
 
 
 <span class="sd">    Args:</span>
-<span class="sd">        aligned_scan: _description_</span>
+<span class="sd">        aligned_scan: [1,1, H, W, D]</span>
 <span class="sd">        model: _description_</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        pred:</span>
+<span class="sd">        pred: 0 for left, 1 for right</span>
+<span class="sd">        probs: probability of the prediction</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
@@ -271,19 +271,16 @@
 
     <span class="c1"># this is the orientation it was trained on by Maddy</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">from_atlas</span><span class="p">:</span>
-        <span class="n">midslice</span> <span class="o">=</span> <span class="n">aligned_scan</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">79</span><span class="p">:</span><span class="mi">82</span><span class="p">]</span>
+        <span class="n">midslice</span> <span class="o">=</span> <span class="n">aligned_scan</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">79</span><span class="p">:</span><span class="mi">82</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="c1"># this is equivalent to this in the atlas orientation</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">rotated</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
-        <span class="n">midslice</span> <span class="o">=</span> <span class="n">rotated</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">85</span><span class="p">:</span><span class="mi">88</span><span class="p">]</span>
-
-    <span class="c1"># bring channel dimension forward</span>
-    <span class="n">midslice</span> <span class="o">=</span> <span class="n">midslice</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">midslice</span> <span class="o">=</span> <span class="n">aligned_scan</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">85</span><span class="p">:</span><span class="mi">88</span><span class="p">]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">midslice</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">midslice</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
 
     <span class="n">outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">midslice</span><span class="p">))</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
     <span class="n">pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">pred</span><span class="p">,</span> <span class="n">outputs</span><span class="p">[:,</span> <span class="n">pred</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">pred</span><span class="p">,</span> <span class="n">outputs</span><span class="p">[:,</span> <span class="n">pred</span><span class="p">]</span>  <span class="c1"># type: ignore</span></div>
 
 </pre></div>
         </article>

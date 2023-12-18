@@ -225,18 +225,21 @@
 <span id="fetalbrain-tedsnet-multi-hemisphere-detector-module"></span><h1>fetalbrain.tedsnet_multi.hemisphere_detector module<a class="headerlink" href="#module-fetalbrain.tedsnet_multi.hemisphere_detector" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="fetalbrain.tedsnet_multi.hemisphere_detector.detect_side">
-<span class="sig-prename descclassname"><span class="pre">fetalbrain.tedsnet_multi.hemisphere_detector.</span></span><span class="sig-name descname"><span class="pre">detect_side</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aligned_scan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_atlas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../../_modules/fetalbrain/tedsnet_multi/hemisphere_detector.html#detect_side"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.tedsnet_multi.hemisphere_detector.detect_side" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fetalbrain.tedsnet_multi.hemisphere_detector.</span></span><span class="sig-name descname"><span class="pre">detect_side</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aligned_scan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_atlas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/fetalbrain/tedsnet_multi/hemisphere_detector.html#detect_side"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.tedsnet_multi.hemisphere_detector.detect_side" title="Link to this definition">#</a></dt>
 <dd><p>_summary_</p>
 <p>Takes as input a scan aligned (no scaling) to the atlas or bean coordinate system.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>aligned_scan</strong> – _description_</p></li>
+<li><p><strong>aligned_scan</strong> – [1,1, H, W, D]</p></li>
 <li><p><strong>model</strong> – _description_</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>pred</strong></p>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>pred</strong> – 0 for left, 1 for right</p></li>
+<li><p><strong>probs</strong> – probability of the prediction</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

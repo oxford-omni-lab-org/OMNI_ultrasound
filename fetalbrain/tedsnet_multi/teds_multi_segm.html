@@ -229,34 +229,30 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="fetalbrain.tedsnet_multi.teds_multi_segm.generate_multiclass_prediction">
 <span class="sig-prename descclassname"><span class="pre">fetalbrain.tedsnet_multi.teds_multi_segm.</span></span><span class="sig-name descname"><span class="pre">generate_multiclass_prediction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../../_modules/fetalbrain/tedsnet_multi/teds_multi_segm.html#generate_multiclass_prediction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.tedsnet_multi.teds_multi_segm.generate_multiclass_prediction" title="Link to this definition">#</a></dt>
-<dd><dl class="simple">
-<dt>Convert the TEDS-multiclass output into a multiclass segmentation mask</dt><dd><p>Note: I don’t think this works for batches atm</p>
-</dd>
-</dl>
+<dd><p>Convert the TEDS-multiclass output into a multiclass segmentation mask</p>
+<p>Note: I don’t think this works for batches atm
+:param prediction: prediction from TEDS model of size [B, 10, H, W, D]</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>prediction</strong> – prediction from TEDS model of size [B, 10, H, W, D]</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>combined_pred</strong> – multiclass segmentation mask of size [H, W, D]</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>combined_pred</strong> – multiclass segmentation mask of size [H, W, D]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fetalbrain.tedsnet_multi.teds_multi_segm.get_prior_shape_sa">
-<span class="sig-prename descclassname"><span class="pre">fetalbrain.tedsnet_multi.teds_multi_segm.</span></span><span class="sig-name descname"><span class="pre">get_prior_shape_sa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'l'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'r'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../../_modules/fetalbrain/tedsnet_multi/teds_multi_segm.html#get_prior_shape_sa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.tedsnet_multi.teds_multi_segm.get_prior_shape_sa" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fetalbrain.tedsnet_multi.teds_multi_segm.</span></span><span class="sig-name descname"><span class="pre">get_prior_shape_sa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../../_modules/fetalbrain/tedsnet_multi/teds_multi_segm.html#get_prior_shape_sa"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.tedsnet_multi.teds_multi_segm.get_prior_shape_sa" title="Link to this definition">#</a></dt>
 <dd><p>Get the prior paired with each week and side</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sd</strong> – which side to get the prior shape for, either ‘r’ or ‘l’</p>
+<dd class="field-odd"><p><strong>sd</strong> – which side to get the prior shape for, either 0 or 1</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>prior_shape</strong> – tensor containing the prior shape</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">prior_shape</span> <span class="o">=</span> <span class="n">get_prior_shape_sa</span><span class="p">(</span><span class="s1">&#39;l&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">prior_shape</span> <span class="o">=</span> <span class="n">get_prior_shape_sa</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -295,14 +291,14 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fetalbrain.tedsnet_multi.teds_multi_segm.segment_tedsall">
-<span class="sig-prename descclassname"><span class="pre">fetalbrain.tedsnet_multi.teds_multi_segm.</span></span><span class="sig-name descname"><span class="pre">segment_tedsall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aligned_scan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segm_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TEDS_Net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'r'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'l'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'r'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/fetalbrain/tedsnet_multi/teds_multi_segm.html#segment_tedsall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.tedsnet_multi.teds_multi_segm.segment_tedsall" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fetalbrain.tedsnet_multi.teds_multi_segm.</span></span><span class="sig-name descname"><span class="pre">segment_tedsall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aligned_scan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segm_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TEDS_Net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">side</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/fetalbrain/tedsnet_multi/teds_multi_segm.html#segment_tedsall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fetalbrain.tedsnet_multi.teds_multi_segm.segment_tedsall" title="Link to this definition">#</a></dt>
 <dd><p>_summary_</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>aligned_scan</strong> – _description_</p></li>
 <li><p><strong>segm_model</strong> – _description_</p></li>
-<li><p><strong>side</strong> – _description_. Defaults to “r”.</p></li>
+<li><p><strong>side</strong> – _description_. Defaults to “0”.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
