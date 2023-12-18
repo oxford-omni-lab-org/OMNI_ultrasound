@@ -20,12 +20,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with: 
-          lfs: 'true'
+          lfs: 'false'
 
       - name: Install and Test
         run: |
           pip install .[all]
           export PYTHONPATH=$PYTHONPATH:${GITHUB_WORKSPACE}/src
+          ftlbr_download_modelweights --force
           pytest Tests/test_subcortical_segmentation.py
           pytest Tests/test_alignment.py
           pytest Tests/test_readio.py
