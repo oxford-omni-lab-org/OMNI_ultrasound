@@ -29,7 +29,11 @@ def load_tedsmulti_model(model_path: Optional[Path] = None) -> TEDS_Net:
 
     model = TEDS_Net()
 
-    model_weights = torch.load(model_path)
+    if torch.cuda.is_available():
+        model_weights = torch.load(model_path)
+    else:
+        model_weights = torch.load(model_path, map_location=torch.device('cpu'))
+
     model.load_state_dict(model_weights)
 
     model.eval()

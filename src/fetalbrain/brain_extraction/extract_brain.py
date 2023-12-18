@@ -21,7 +21,11 @@ def load_brainextraction_model(model_path: Optional[Path] = None) -> UNet:
         model_path = BRAIN_EXTRACTION_MODEL_PATH
 
     model = UNet()
-    model_weights = torch.load(model_path)
+    if torch.cuda.is_available():
+        model_weights = torch.load(model_path)
+    else:
+        model_weights = torch.load(model_path, map_location=torch.device('cpu'))
+
     model.load_state_dict(model_weights)
     model.eval()
     torch.set_grad_enabled(False)

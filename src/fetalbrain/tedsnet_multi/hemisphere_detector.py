@@ -22,7 +22,11 @@ def load_sidedetector_model(model_path: Optional[Path] = None) -> torch.nn.Modul
 
     model = torch.hub.load("pytorch/vision:v0.10.0", "resnet18", pretrained=False, num_classes=2)
 
-    model_weights = torch.load(model_path)
+    if torch.cuda.is_available():
+        model_weights = torch.load(model_path)
+    else:
+        model_weights = torch.load(model_path, map_location=torch.device("cpu"))
+    
     model.load_state_dict(model_weights)
 
     model.eval()
