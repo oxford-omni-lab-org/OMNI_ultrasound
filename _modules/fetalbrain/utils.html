@@ -260,7 +260,7 @@
     <span class="k">assert</span> <span class="n">vol_path</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;vol_path does not exist: </span><span class="si">{</span><span class="n">vol_path</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="k">assert</span> <span class="n">vol_path</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.mha&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;vol_path must be a .mha file: </span><span class="si">{</span><span class="n">vol_path</span><span class="si">}</span><span class="s2">&quot;</span>
 
-    <span class="n">itk_img</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">ReadImage</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">vol_path</span><span class="p">))</span>
+    <span class="n">itk_img</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">ReadImage</span><span class="p">(</span><span class="n">vol_path</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
     <span class="n">sitk_array</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetArrayFromImage</span><span class="p">(</span><span class="n">itk_img</span><span class="p">)</span>
 
     <span class="c1"># swap axes to match nii convention [z, y, x]</span>
