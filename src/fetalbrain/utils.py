@@ -47,7 +47,7 @@ def _read_mha_image(
     assert vol_path.exists(), f"vol_path does not exist: {vol_path}"
     assert vol_path.suffix == ".mha", f"vol_path must be a .mha file: {vol_path}"
 
-    itk_img = sitk.ReadImage(str(vol_path))
+    itk_img = sitk.ReadImage(vol_path.absolute().as_posix())
     sitk_array = sitk.GetArrayFromImage(itk_img)
 
     # swap axes to match nii convention [z, y, x]
