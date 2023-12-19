@@ -14,13 +14,39 @@ from fetalbrain.tedsnet_multi.teds_multi_segm import (
 )
 import os
 from fetalbrain.utils import read_image, write_image, plot_midplanes
-from fetalbrain.structural_segmentation.subcortical_segm import prepare_scan_segm
-from fetalbrain.alignment.align import align_scan
+from fetalbrain.tedsnet_multi.hemisphere_detector import load_sidedetector_model, detect_side
+from fetalbrain.brain_extraction.extract import extract_scan_brain
+from fetalbrain.alignment.align import align_scan, prepare_scan
 from fetalbrain.tedsnet_multi.network.TEDS_Net import TEDS_Net
+
+
+
+pathx = Path('/home/sedm6226/Documents/Projects/US_analysis_package/Original_Codes/Teds_All_Maddy/Data_utrechttest')
+pathlist = pathx.glob('*.mha')
+
+for pathnum in pathlist:
+    example_scan, _ = read_image(pathnum)
+    aligned_scan, params = align_scan(example_scan, to_atlas=True)
+    write_image(pathnum.parent / (pathnum.stem + '_aligned.nii.gz'), aligned_scan.cpu().numpy().squeeze())
+    tedssegm, keys = segment_scan_tedsall(aligned_scan)
+    write_image(pathnum.parent/ (pathnum.stem + '_tedsmulti.nii.gz'), tedssegm.squeeze())
+
+    whole_brain = extract_scan_brain(aligned_scan)
+    write_image(pathnum.parent / (pathnum.stem + '_brainmask.nii.gz'), whole_brain.cpu().numpy().squeeze())
+
+
+
+
+
+
+
+
+
+
 
 def setup_netw():
     net = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=False,num_classes=2)
-    state_dict= torch.load("/home/sedm6226/Documents/Projects/US_analysis_package/src/fetalbrain/tedsnet_multi/network/FinalModel_sidedetection.pt")
+    state_dict= torch.load("/home/sedm6226/Documents/Projects/US_analysis_package/src/model_weights/teds_segmentation/FinalModel_sidedetection.pt")
     net.load_state_dict(state_dict)
     net.eval()
     return net
@@ -28,19 +54,30 @@ def setup_netw():
 pathx = "/home/sedm6226/Documents/Projects/US_analysis_package/Original_Codes/SideDetection_Packaged_Maddy/Data/scans/07-10279_20130722_1263.nii.gz"
 
 
-vol = sitk.GetArrayFromImage(sitk.ReadImage(os.path.join(pathx))) * 255
+vol, spacing = read_image(Path(pathx))
+aligned_scan, _parms = align_scan(vol, scale=False, to_atlas=False)
 ss = 80
-slice = np.expand_dims(vol[ss - 1 : ss + 2, :, :], 0)  # 3 channels
-slice = torch.from_numpy(slice.astype(np.float32))  # move 3 to the front
+
+# extract slice
+slicex = aligned_scan[0,0, :, :, ss - 1 : ss + 2].permute(2, 1, 0)
+
+
 
 device = torch.device("cpu" if not torch.cuda.is_available() else "cuda:0")
-
-
 net = setup_netw().to(device)
+
+
+
+output_ban = detect_side(aligned_scan.to(device), net, from_atlas=False)
+aligned_scan, _parms = align_scan(vol, scale=False, to_atlas=True)
+output_atlas = detect_side(aligned_scan.to(device), net, from_atlas=True)
+
 im = slice.to(device)
 
-outputs = torch.sigmoid(net(im)).detach().cpu().numpy()
+outputs = torch.sigmoid(net(slicex.to(device).unsqueeze(0))).detach().cpu().numpy()
 pred = np.argmax(outputs)
+
+
 
 print(pred)
 # 0 is left, 1 is right

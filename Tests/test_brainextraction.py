@@ -25,7 +25,7 @@ def test_extract_brain() -> None:
 
     # extract the whole brain
     segm_model = load_brainextraction_model()
-    brain_mask = extract_brain(aligned_im, segm_model)
+    brain_mask, key_map = extract_brain(aligned_im, segm_model)
     brain_mask = brain_mask.cpu().squeeze().numpy()
 
     # compare to a reference segmentation
@@ -43,8 +43,8 @@ def test_extract_scan_brain() -> None:
 
     # align to atlas
     aligned_im, _ = align_scan(example_scan, scale=False, to_atlas=True)
-    brain_mask = extract_scan_brain(aligned_im)
-    brain_mask = brain_mask.cpu().squeeze().numpy()
+    brain_mask, key_map = extract_scan_brain(aligned_im)
+    brain_mask = brain_mask.squeeze()
 
     # compare to a reference segmentation
     ref_segmpath = TEST_BRAINEXTRACTION_PATH / "ref_brainmask.nii.gz"

@@ -32,6 +32,23 @@ def download_modelweights(force: bool = False) -> None:
     return
 
 
+def download_exampleimage(force: bool = False) -> None:
+    download_folder = MODEL_WEIGHTS_FOLDER.parent / 'fetalbrain' / 'data'
+    download_folder.mkdir(parents=True, exist_ok=True)
+
+    if download_folder.exists() and not force:
+        warnings.warn("Example image already downloaded, skipping download")
+        return
+
+    else:
+        url = "https://github.com/oxford-omni-lab-org/OMNI_ultrasound/releases/download/prerelease/example_image.nii.gz"
+        path, headers = urlretrieve(url, download_folder / "example_image.nii.gz")
+
+        print('Example image downloaded to {}'.format(download_folder))
+
+    return
+
+
 def download_testdata(force: bool = False) -> None:
     download_folder = Path(__file__).parent.parent.parent / "Tests" / "testdata"
 
@@ -63,6 +80,7 @@ def main() -> None:
     args = parser.parse_args()
 
     download_modelweights(force=args.force)
+    download_exampleimage(force=args.force)
 
     if args.testdata:
         download_testdata(force=args.force)

@@ -1,12 +1,13 @@
 import torch
 from pathlib import Path
 from typing import Optional
+import numpy as np
 from ..model_paths import BRAIN_EXTRACTION_MODEL_PATH
 from ..tedsnet_multi.network.UNet import UNet_MW as UNet
 
 
 def load_brainextraction_model(model_path: Optional[Path] = None) -> UNet:
-    """ Load the brain extraction model for whole brain masking of the fetal brain.
+    """Load the brain extraction model for whole brain masking of the fetal brain.
     Args:
         model_path: the path to the model. Defaults to None, then the standard path is loaded.
 
@@ -24,7 +25,7 @@ def load_brainextraction_model(model_path: Optional[Path] = None) -> UNet:
     if torch.cuda.is_available():
         model_weights = torch.load(model_path)
     else:
-        model_weights = torch.load(model_path, map_location=torch.device('cpu'))
+        model_weights = torch.load(model_path, map_location=torch.device("cpu"))
 
     model.load_state_dict(model_weights)
     model.eval()
@@ -33,7 +34,7 @@ def load_brainextraction_model(model_path: Optional[Path] = None) -> UNet:
     return model
 
 
-def extract_brain(aligned_scan: torch.Tensor, segm_model: UNet) -> torch.Tensor:
+def extract_brain(aligned_scan: torch.Tensor, segm_model: UNet) -> tuple[torch.Tensor, dict[str, int]]:
     """Generate brain mask for a given aligned scan using the provided segmentation model.
 
     Args:
@@ -53,10 +54,11 @@ def extract_brain(aligned_scan: torch.Tensor, segm_model: UNet) -> torch.Tensor:
     brain_mask = segm_model(aligned_scan)
     brain_mask = torch.where(brain_mask > 0.5, 1, 0)
 
-    return brain_mask
+    key_maps = {"brain": 1}
+    return brain_mask, key_maps
 
 
-def extract_scan_brain(scan: torch.Tensor) -> torch.Tensor:
+def extract_scan_brain(scan: torch.Tensor) -> tuple[np.ndarray, dict[str, int]]:
     """Generate brain mask for a given scan using the default brain extraction model weights
 
     Args:
@@ -71,6 +73,6 @@ def extract_scan_brain(scan: torch.Tensor) -> torch.Tensor:
         >>> brain_mask = extract_scan_brain(scan)
     """
     extraction_model = load_brainextraction_model()
-    brain_mask = extract_brain(scan, extraction_model.to(scan.device))
+    brain_mask, key_maps = extract_brain(scan, extraction_model.to(scan.device))
 
-    return brain_mask
+    return brain_mask.cpu().numpy(), key_maps

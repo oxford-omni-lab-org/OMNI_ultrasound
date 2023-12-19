@@ -34,10 +34,10 @@ def test_segment_subcortical() -> None:
     multi_class, class_dict = segment_subcortical(aligned_scan_prep, segm_model)
 
     assert multi_class.shape == (1, 160, 160, 160)
-    assert torch.max(multi_class) == 4
+    assert np.max(multi_class) == 4
 
     # compare to a saved reference segmentation for this volume
-    multi_class_np = multi_class[0].cpu().numpy()
+    multi_class_np = multi_class[0]
 
     ref_segmpath = TEST_SEGM_PATH / "ref_segmap.nii.gz"
     ref_segm, _ = read_image(ref_segmpath)

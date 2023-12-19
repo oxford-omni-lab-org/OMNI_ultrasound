@@ -53,6 +53,7 @@ def get_prior_shape_sa(sd: Literal[0, 1]) -> torch.Tensor:
 
     Example:
         >>> prior_shape = get_prior_shape_sa(0)
+
     """
 
     assert sd in [0, 1], "sd should be either 0 or 1"

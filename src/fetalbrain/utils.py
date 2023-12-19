@@ -172,6 +172,7 @@ def write_image(
     image_array: np.ndarray,
     spacing: tuple[float, float, float] = (0.6, 0.6, 0.6),
     dtype: np.dtype = np.uint8,
+    segm: bool = False,
 ) -> None:
     """Saves a numpy array as an nifti or mha image, the type is determined by the file extension.
     The images are written with integer pixel values between 0 and 255
@@ -190,7 +191,7 @@ def write_image(
     if isinstance(vol_path, str):
         vol_path = Path(vol_path)
 
-    if np.max(image_array) <= 1:
+    if np.max(image_array) <= 1 and not segm:
         warnings.warn(
             "Image array has values between 0 and 1, expects pixel values between 0 and 255\
                       for image data",

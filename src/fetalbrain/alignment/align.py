@@ -1,28 +1,3 @@
-"""This module contains the main functions for aligning the scans.
-
-A single scan be aligned using the :func:`align_scan` function, which is a wrapper that loads the alignment model,
-prepares the scan into pytorch and computes and applies the alignment transformation. The alignment can be
-applied without scaling (i.e. preserving the size of the brain) or with scaling (i.e. scaling all images to the
-same reference brain size at 30GWs):
-    >>> dummy_scan = np.random.rand(160, 160, 160)
-    >>> aligned_scan, params = align_scan(dummy_scan, scale=False, to_atlas=True)
-    >>> aligned_scan_scaled, params = align_scan(dummy_scan, scale=True)
-
-For aligning a large number of scans,
-it is recommended to access the functions :func:`load_alignment_model`, :func:`prepare_scan` and the
-:func:`align_to_atlas` functions directly so that the alignment model is not reloaded for the alignment of each scan.
-For example as follows:
-    >>> model = load_alignment_model()
-    >>> dummy_scan = np.random.rand(160, 160, 160)
-    >>> torch_scan = prepare_scan(dummy_scan)
-    >>> aligned_scan, params = align_to_atlas(torch_scan, model, scale = False)
-
-The :func:`align_to_atlas` function can also process batches of data (i.e. multiple scans at once), which can be useful
-to speed up analysis. More advanced examples can be found in the Example Gallery.
-
-Module functions
------------------
-"""
 import torch
 import numpy as np
 from pathlib import Path
@@ -38,6 +13,7 @@ BEAN_TO_ATLAS = Path("src/fetalbrain/alignment/config/25wks_Atlas(separateHems)_
 
 def load_alignment_model(model_path: Optional[Path] = None) -> AlignmentModel:
     """Load the fBAN alignment model
+
     Args:
         model_path: path to the trained model, defaults to None (uses the default model)
 
@@ -53,7 +29,11 @@ def load_alignment_model(model_path: Optional[Path] = None) -> AlignmentModel:
 
     # instantiate model
     model = AlignmentModel()
-    model_weights = torch.load(model_path)
+
+    if torch.cuda.is_available():
+        model_weights = torch.load(model_path, map_location=torch.device("cuda"))
+    else:
+        model_weights = torch.load(model_path, map_location=torch.device("cpu"))
     model.load_state_dict(model_weights, strict=True)
 
     # set to eval mode
@@ -171,8 +151,23 @@ def align_to_bean(
         return image_aligned, param_dict
 
 
+# Function overload to make mypy recognize different return types
+@overload
 def align_to_atlas(
-    image: torch.Tensor, model: AlignmentModel, scale: bool = False, return_affine: bool = False
+    image: torch.Tensor, model: AlignmentModel, return_affine: Literal[False] = False, scale: bool = False
+) -> tuple[torch.Tensor, dict]:
+    ...
+
+
+@overload
+def align_to_atlas(
+    image: torch.Tensor, model: AlignmentModel, return_affine: Literal[True], scale: bool = False
+) -> tuple[torch.Tensor, dict, torch.Tensor]:
+    ...
+
+
+def align_to_atlas(
+    image: torch.Tensor, model: AlignmentModel, return_affine: bool = False, scale: bool = False
 ) -> Union[tuple[torch.Tensor, dict], tuple[torch.Tensor, dict, torch.Tensor]]:
     """
     Aligns the scan to the atlas coordinate system using the fban model.
@@ -210,13 +205,13 @@ def align_to_atlas(
     transform_affine_noscale = generate_affine(
         parameter_translation=translation * 160,
         parameter_rotation=rotation,
-        parameter_scaling=torch.tensor([[1.0, 1.0, 1.0]]),
+        parameter_scaling=torch.tensor([[1.0, 1.0, 1.0]], device=image.device),
         type_rotation="quaternions",
         transform_order="srt",
     )
 
     # get bean to atlas transformation
-    to_atlas_affine = _get_transform_to_atlasspace()
+    to_atlas_affine = _get_transform_to_atlasspace().to(image.device)
 
     if not scale:
         total_transform = to_atlas_affine @ transform_affine_noscale
@@ -320,12 +315,12 @@ def transform_from_affine(image: torch.Tensor, transform_affine: torch.Tensor) -
 
 def _get_atlastransform_itksnap(pixel_spacing: float = 0.6) -> torch.Tensor:
     """These transformation parameters were obtained by registering a set of 20 bean aligned images (no scale)
-        to the same images aligned to the atlas space in ITK-SNAP. There was no clear pattern in the
-        parameters with respect to GA/skull size, so a median was taken which can be used to align the
-        unscaled BEAN images to the atlas space.
+    to the same images aligned to the atlas space in ITK-SNAP. There was no clear pattern in the
+    parameters with respect to GA/skull size, so a median was taken which can be used to align the
+    unscaled BEAN images to the atlas space.
 
-        In ITK-SNAP the parameters are given in degree and mm, so these have to be transformed to
-        pixels and radians to be used with the transformation functions.
+    In ITK-SNAP the parameters are given in degree and mm, so these have to be transformed to
+    pixels and radians to be used with the transformation functions.
 
     Args:
         pixel_spacing: pixel spacing of the images, defaults to 0.6
@@ -380,7 +375,7 @@ def _get_transform_to_atlasspace() -> torch.Tensor:
     return total_transform
 
 
-def align_scan(scan: np.ndarray, scale: bool = False, to_atlas: bool = True) -> tuple[np.ndarray, dict]:
+def align_scan(scan: np.ndarray, scale: bool = False, to_atlas: bool = True) -> tuple[torch.Tensor, dict]:
     """align a scan to a reference coordinate system
 
     This function aligns the input scan to either the atlas or bean coordinate system, with the
@@ -409,8 +404,8 @@ def align_scan(scan: np.ndarray, scale: bool = False, to_atlas: bool = True) -> 
 
     # align scan
     if to_atlas:
-        aligned_scan, params = align_to_atlas(torch_scan, model, scale=scale)  # type: ignore
+        aligned_scan, params = align_to_atlas(torch_scan, model, scale=scale, return_affine=False)
     else:
-        aligned_scan, params = align_to_bean(torch_scan, model, scale=scale)
+        aligned_scan, params = align_to_bean(torch_scan, model, scale=scale, return_affine=False)
 
-    return aligned_scan, params  # type: ignore
+    return aligned_scan, params

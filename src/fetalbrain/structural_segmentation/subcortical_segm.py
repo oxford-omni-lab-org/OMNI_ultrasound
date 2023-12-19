@@ -38,7 +38,7 @@ from ..model_paths import SEGM_MODEL_PATH
 from ..alignment.align import prepare_scan
 
 
-def load_segmentation_model(model_path: Optional[Path] = None, device: str = 'cpu') -> torch.nn.DataParallel[UNet]:
+def load_segmentation_model(model_path: Optional[Path] = None, device: str = "cpu") -> torch.nn.DataParallel[UNet]:
     """Load the trained segmentation model
     Args:
         model_path: path to the trained model. Defaults to None (uses the default model).
@@ -60,7 +60,7 @@ def load_segmentation_model(model_path: Optional[Path] = None, device: str = 'cp
     if torch.cuda.is_available():
         model_weights = torch.load(model_path)
     else:
-        model_weights = torch.load(model_path, map_location=torch.device('cpu'))
+        model_weights = torch.load(model_path, map_location=torch.device("cpu"))
     model.load_state_dict(model_weights["model_state_dict"])
 
     # set model to evaluation mode
@@ -71,8 +71,8 @@ def load_segmentation_model(model_path: Optional[Path] = None, device: str = 'cp
 
 
 def segment_subcortical(
-    aligned_scan: torch.Tensor, segm_model: torch.nn.DataParallel[UNet]
-) -> tuple[torch.Tensor, dict[str, int]]:
+    aligned_scan: torch.Tensor, segm_model: torch.nn.DataParallel[UNet], connected_component: bool = False
+) -> tuple[np.ndarray, dict[str, int]]:
     """Generate subcortical predictions for a given aligned scan using the provided segmentation model.
 
     Args:
@@ -109,7 +109,11 @@ def segment_subcortical(
     # define key maps of model output
     key_maps = {"ChP": 1, "LPVH": 2, "CSPV": 3, "CB": 4}
 
-    return segm_map, key_maps
+    segm_map_np = segm_map.cpu().numpy()
+    if connected_component:
+        segm_map_np = keep_largest_compoment(segm_map_np)
+
+    return segm_map_np, key_maps
 
 
 def compute_volume_segm(
@@ -225,13 +229,9 @@ def segment_scan_subc(
     segm_model = load_segmentation_model()
     aligned_scan_prep = prepare_scan(aligned_scan)
 
-    segm_pred, key_maps = segment_subcortical(aligned_scan_prep, segm_model)
-    segm_pred_np = segm_pred.cpu().numpy()
+    segm_pred, key_maps = segment_subcortical(aligned_scan_prep, segm_model, connected_component=connected_component)
 
-    if connected_component:
-        segm_pred_np = keep_largest_compoment(segm_pred_np)
-
-    return segm_pred_np.squeeze(), key_maps
+    return segm_pred.squeeze(), key_maps
 
 
 # to do: write tests for connected components and compute volume segm
