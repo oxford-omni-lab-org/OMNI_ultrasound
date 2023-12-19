@@ -6,6 +6,7 @@ from fetalbrain.utils import read_image
 from fetalbrain.alignment.align import align_scan
 from fetalbrain.tedsnet_multi.teds_multi_segm import get_prior_shape_sa, segment_scan_tedsall, load_tedsmulti_model
 from path_literals import TEST_IMAGE_PATH, TEST_MULTITEDS_PATH
+from test_brainextraction import compare_threshold
 
 
 def test_load_tedsmulti_model(model_path: Optional[Path] = None) -> None:
@@ -36,3 +37,5 @@ def test_segment_scan_tedsall() -> None:
 
     assert ref_segm.shape == tedssegm.shape
     assert np.allclose(ref_segm, tedssegm, atol=1e-4)
+    print(compare_threshold(ref_segm, tedssegm, 1))
+    assert compare_threshold(ref_segm, tedssegm, 1) > 0.98
