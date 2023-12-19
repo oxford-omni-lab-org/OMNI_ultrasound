@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from fetalbrain.utils import read_image
 from fetalbrain.alignment.align import align_scan
-from fetalbrain.brain_extraction.extract_brain import load_brainextraction_model, extract_brain, extract_scan_brain
+from fetalbrain.brain_extraction.extract import load_brainextraction_model, extract_brain, extract_scan_brain
 from path_literals import TEST_IMAGE_PATH, TEST_BRAINEXTRACTION_PATH
 
 
@@ -33,7 +33,7 @@ def test_extract_brain() -> None:
     ref_segm, _ = read_image(ref_segmpath)
 
     assert ref_segm.shape == brain_mask.shape
-    #assert np.allclose(ref_segm, brain_mask, atol=1e-4)
+    # assert np.allclose(ref_segm, brain_mask, atol=1e-4)
     print(compare_threshold(ref_segm, brain_mask, 1))
     assert compare_threshold(ref_segm, brain_mask, 1) > 0.98
 
