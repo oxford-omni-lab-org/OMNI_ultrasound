@@ -211,32 +211,7 @@
         </div>
         <article role="main">
           <h1>Source code for fetalbrain.alignment.align</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;This module contains the main functions for aligning the scans.</span>
-
-<span class="sd">A single scan be aligned using the :func:`align_scan` function, which is a wrapper that loads the alignment model,</span>
-<span class="sd">prepares the scan into pytorch and computes and applies the alignment transformation. The alignment can be</span>
-<span class="sd">applied without scaling (i.e. preserving the size of the brain) or with scaling (i.e. scaling all images to the</span>
-<span class="sd">same reference brain size at 30GWs):</span>
-<span class="sd">    &gt;&gt;&gt; dummy_scan = np.random.rand(160, 160, 160)</span>
-<span class="sd">    &gt;&gt;&gt; aligned_scan, params = align_scan(dummy_scan, scale=False, to_atlas=True)</span>
-<span class="sd">    &gt;&gt;&gt; aligned_scan_scaled, params = align_scan(dummy_scan, scale=True)</span>
-
-<span class="sd">For aligning a large number of scans,</span>
-<span class="sd">it is recommended to access the functions :func:`load_alignment_model`, :func:`prepare_scan` and the</span>
-<span class="sd">:func:`align_to_atlas` functions directly so that the alignment model is not reloaded for the alignment of each scan.</span>
-<span class="sd">For example as follows:</span>
-<span class="sd">    &gt;&gt;&gt; model = load_alignment_model()</span>
-<span class="sd">    &gt;&gt;&gt; dummy_scan = np.random.rand(160, 160, 160)</span>
-<span class="sd">    &gt;&gt;&gt; torch_scan = prepare_scan(dummy_scan)</span>
-<span class="sd">    &gt;&gt;&gt; aligned_scan, params = align_to_atlas(torch_scan, model, scale = False)</span>
-
-<span class="sd">The :func:`align_to_atlas` function can also process batches of data (i.e. multiple scans at once), which can be useful</span>
-<span class="sd">to speed up analysis. More advanced examples can be found in the Example Gallery.</span>
-
-<span class="sd">Module functions</span>
-<span class="sd">-----------------</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">torch</span>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">overload</span><span class="p">,</span> <span class="n">Literal</span>
@@ -253,6 +228,7 @@
 <a class="viewcode-back" href="../../../fetalbrain/alignment/align.html#fetalbrain.alignment.align.load_alignment_model">[docs]</a>
 <span class="k">def</span> <span class="nf">load_alignment_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AlignmentModel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the fBAN alignment model</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        model_path: path to the trained model, defaults to None (uses the default model)</span>
 
@@ -268,7 +244,11 @@
 
     <span class="c1"># instantiate model</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">AlignmentModel</span><span class="p">()</span>
-    <span class="n">model_weights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+        <span class="n">model_weights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">model_weights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">))</span>
     <span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">model_weights</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># set to eval mode</span>
@@ -393,10 +373,25 @@
 
 
 
+<span class="c1"># Function overload to make mypy recognize different return types</span>
+<span class="nd">@overload</span>
+<span class="k">def</span> <span class="nf">align_to_atlas</span><span class="p">(</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">AlignmentModel</span><span class="p">,</span> <span class="n">return_affine</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+    <span class="o">...</span>
+
+
+<span class="nd">@overload</span>
+<span class="k">def</span> <span class="nf">align_to_atlas</span><span class="p">(</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">AlignmentModel</span><span class="p">,</span> <span class="n">return_affine</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+    <span class="o">...</span>
+
+
 <div class="viewcode-block" id="align_to_atlas">
 <a class="viewcode-back" href="../../../fetalbrain/alignment/align.html#fetalbrain.alignment.align.align_to_atlas">[docs]</a>
 <span class="k">def</span> <span class="nf">align_to_atlas</span><span class="p">(</span>
-    <span class="n">image</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">AlignmentModel</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">return_affine</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">AlignmentModel</span><span class="p">,</span> <span class="n">return_affine</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Aligns the scan to the atlas coordinate system using the fban model.</span>
@@ -434,13 +429,13 @@
     <span class="n">transform_affine_noscale</span> <span class="o">=</span> <span class="n">generate_affine</span><span class="p">(</span>
         <span class="n">parameter_translation</span><span class="o">=</span><span class="n">translation</span> <span class="o">*</span> <span class="mi">160</span><span class="p">,</span>
         <span class="n">parameter_rotation</span><span class="o">=</span><span class="n">rotation</span><span class="p">,</span>
-        <span class="n">parameter_scaling</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]]),</span>
+        <span class="n">parameter_scaling</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span> <span class="n">device</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
         <span class="n">type_rotation</span><span class="o">=</span><span class="s2">&quot;quaternions&quot;</span><span class="p">,</span>
         <span class="n">transform_order</span><span class="o">=</span><span class="s2">&quot;srt&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="c1"># get bean to atlas transformation</span>
-    <span class="n">to_atlas_affine</span> <span class="o">=</span> <span class="n">_get_transform_to_atlasspace</span><span class="p">()</span>
+    <span class="n">to_atlas_affine</span> <span class="o">=</span> <span class="n">_get_transform_to_atlasspace</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">scale</span><span class="p">:</span>
         <span class="n">total_transform</span> <span class="o">=</span> <span class="n">to_atlas_affine</span> <span class="o">@</span> <span class="n">transform_affine_noscale</span>
@@ -551,12 +546,12 @@
 
 <span class="k">def</span> <span class="nf">_get_atlastransform_itksnap</span><span class="p">(</span><span class="n">pixel_spacing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;These transformation parameters were obtained by registering a set of 20 bean aligned images (no scale)</span>
-<span class="sd">        to the same images aligned to the atlas space in ITK-SNAP. There was no clear pattern in the</span>
-<span class="sd">        parameters with respect to GA/skull size, so a median was taken which can be used to align the</span>
-<span class="sd">        unscaled BEAN images to the atlas space.</span>
+<span class="sd">    to the same images aligned to the atlas space in ITK-SNAP. There was no clear pattern in the</span>
+<span class="sd">    parameters with respect to GA/skull size, so a median was taken which can be used to align the</span>
+<span class="sd">    unscaled BEAN images to the atlas space.</span>
 
-<span class="sd">        In ITK-SNAP the parameters are given in degree and mm, so these have to be transformed to</span>
-<span class="sd">        pixels and radians to be used with the transformation functions.</span>
+<span class="sd">    In ITK-SNAP the parameters are given in degree and mm, so these have to be transformed to</span>
+<span class="sd">    pixels and radians to be used with the transformation functions.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        pixel_spacing: pixel spacing of the images, defaults to 0.6</span>
@@ -613,7 +608,7 @@
 
 <div class="viewcode-block" id="align_scan">
 <a class="viewcode-back" href="../../../fetalbrain/alignment/align.html#fetalbrain.alignment.align.align_scan">[docs]</a>
-<span class="k">def</span> <span class="nf">align_scan</span><span class="p">(</span><span class="n">scan</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">to_atlas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="k">def</span> <span class="nf">align_scan</span><span class="p">(</span><span class="n">scan</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">to_atlas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;align a scan to a reference coordinate system</span>
 
 <span class="sd">    This function aligns the input scan to either the atlas or bean coordinate system, with the</span>
@@ -642,11 +637,11 @@
 
     <span class="c1"># align scan</span>
     <span class="k">if</span> <span class="n">to_atlas</span><span class="p">:</span>
-        <span class="n">aligned_scan</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">align_to_atlas</span><span class="p">(</span><span class="n">torch_scan</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="n">aligned_scan</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">align_to_atlas</span><span class="p">(</span><span class="n">torch_scan</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">return_affine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">aligned_scan</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">align_to_bean</span><span class="p">(</span><span class="n">torch_scan</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+        <span class="n">aligned_scan</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">align_to_bean</span><span class="p">(</span><span class="n">torch_scan</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">return_affine</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">aligned_scan</span><span class="p">,</span> <span class="n">params</span>  <span class="c1"># type: ignore</span></div>
+    <span class="k">return</span> <span class="n">aligned_scan</span><span class="p">,</span> <span class="n">params</span></div>
 
 </pre></div>
         </article>

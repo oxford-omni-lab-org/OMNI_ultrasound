@@ -253,7 +253,7 @@
 
 <div class="viewcode-block" id="load_segmentation_model">
 <a class="viewcode-back" href="../../../fetalbrain/structural_segmentation/subcortical_segm.html#fetalbrain.structural_segmentation.subcortical_segm.load_segmentation_model">[docs]</a>
-<span class="k">def</span> <span class="nf">load_segmentation_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;cpu&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">[</span><span class="n">UNet</span><span class="p">]:</span>
+<span class="k">def</span> <span class="nf">load_segmentation_model</span><span class="p">(</span><span class="n">model_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">[</span><span class="n">UNet</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the trained segmentation model</span>
 <span class="sd">    Args:</span>
 <span class="sd">        model_path: path to the trained model. Defaults to None (uses the default model).</span>
@@ -275,7 +275,7 @@
     <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
         <span class="n">model_weights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">model_weights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cpu&#39;</span><span class="p">))</span>
+        <span class="n">model_weights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_path</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">))</span>
     <span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">model_weights</span><span class="p">[</span><span class="s2">&quot;model_state_dict&quot;</span><span class="p">])</span>
 
     <span class="c1"># set model to evaluation mode</span>
@@ -289,8 +289,8 @@
 <div class="viewcode-block" id="segment_subcortical">
 <a class="viewcode-back" href="../../../fetalbrain/structural_segmentation/subcortical_segm.html#fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical">[docs]</a>
 <span class="k">def</span> <span class="nf">segment_subcortical</span><span class="p">(</span>
-    <span class="n">aligned_scan</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">segm_model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">[</span><span class="n">UNet</span><span class="p">]</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+    <span class="n">aligned_scan</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">segm_model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">DataParallel</span><span class="p">[</span><span class="n">UNet</span><span class="p">],</span> <span class="n">connected_component</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate subcortical predictions for a given aligned scan using the provided segmentation model.</span>
 
 <span class="sd">    Args:</span>
@@ -327,7 +327,11 @@
     <span class="c1"># define key maps of model output</span>
     <span class="n">key_maps</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ChP&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;LPVH&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;CSPV&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;CB&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
 
-    <span class="k">return</span> <span class="n">segm_map</span><span class="p">,</span> <span class="n">key_maps</span></div>
+    <span class="n">segm_map_np</span> <span class="o">=</span> <span class="n">segm_map</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">connected_component</span><span class="p">:</span>
+        <span class="n">segm_map_np</span> <span class="o">=</span> <span class="n">keep_largest_compoment</span><span class="p">(</span><span class="n">segm_map_np</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">segm_map_np</span><span class="p">,</span> <span class="n">key_maps</span></div>
 
 
 
@@ -452,13 +456,9 @@
     <span class="n">segm_model</span> <span class="o">=</span> <span class="n">load_segmentation_model</span><span class="p">()</span>
     <span class="n">aligned_scan_prep</span> <span class="o">=</span> <span class="n">prepare_scan</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
 
-    <span class="n">segm_pred</span><span class="p">,</span> <span class="n">key_maps</span> <span class="o">=</span> <span class="n">segment_subcortical</span><span class="p">(</span><span class="n">aligned_scan_prep</span><span class="p">,</span> <span class="n">segm_model</span><span class="p">)</span>
-    <span class="n">segm_pred_np</span> <span class="o">=</span> <span class="n">segm_pred</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="n">segm_pred</span><span class="p">,</span> <span class="n">key_maps</span> <span class="o">=</span> <span class="n">segment_subcortical</span><span class="p">(</span><span class="n">aligned_scan_prep</span><span class="p">,</span> <span class="n">segm_model</span><span class="p">,</span> <span class="n">connected_component</span><span class="o">=</span><span class="n">connected_component</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">connected_component</span><span class="p">:</span>
-        <span class="n">segm_pred_np</span> <span class="o">=</span> <span class="n">keep_largest_compoment</span><span class="p">(</span><span class="n">segm_pred_np</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">segm_pred_np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">key_maps</span></div>
+    <span class="k">return</span> <span class="n">segm_pred</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">key_maps</span></div>
 
 
 
