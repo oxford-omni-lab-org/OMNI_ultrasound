@@ -276,39 +276,6 @@ in the correct location.</p>
 <h2>Minimal Example<a class="headerlink" href="#minimal-example" title="Link to this heading">#</a></h2>
 <p>The following example shows a minimal example of using the whole pipeline to align,
 and segment a fetal brain scan.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.utils</span> <span class="kn">import</span> <span class="n">read_image</span><span class="p">,</span> <span class="n">write_image</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.alignment.align</span> <span class="kn">import</span> <span class="n">align_scan</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.structural_segmentation.subcortical_segm</span> <span class="kn">import</span> <span class="n">segment_scan_subc</span><span class="p">,</span> <span class="n">compute_volume_segm</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.tedsnet_multi.teds_multi_segm</span> <span class="kn">import</span> <span class="n">segment_scan_tedsall</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.brain_extraction.extract</span> <span class="kn">import</span> <span class="n">extract_scan_brain</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.model_paths</span> <span class="kn">import</span> <span class="n">EXAMPLE_IMAGE_PATH</span>
-
-<span class="n">example_scan</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">EXAMPLE_IMAGE_PATH</span><span class="p">)</span>
-
-<span class="c1"># Start with alignment to atlas space</span>
-<span class="n">aligned_scan</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">align_scan</span><span class="p">(</span><span class="n">example_scan</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">to_atlas</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># Perform subcortical segmentation</span>
-<span class="n">subc_segm</span><span class="p">,</span> <span class="n">subc_keys</span> <span class="o">=</span> <span class="n">segment_scan_subc</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">,</span> <span class="n">connected_component</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># Use TEDSnet to do all structure segmentations</span>
-<span class="n">allstructure_segm</span><span class="p">,</span> <span class="n">multi_keys</span> <span class="o">=</span> <span class="n">segment_scan_tedsall</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
-
-<span class="c1"># Extract the brain</span>
-<span class="n">brain_mask</span><span class="p">,</span> <span class="n">brain_key</span> <span class="o">=</span> <span class="n">extract_scan_brain</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
-
-<span class="c1"># Write out the results in the aligned orientation</span>
-<span class="n">write_image</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;aligned_scan.nii.gz&quot;</span><span class="p">),</span> <span class="n">aligned_scan</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
-<span class="n">write_image</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;subcortical_segm.nii.gz&quot;</span><span class="p">),</span> <span class="n">subc_segm</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">segm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">write_image</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;allstructure_segm.nii.gz&quot;</span><span class="p">),</span> <span class="n">allstructure_segm</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">segm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">write_image</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;brain_mask.nii.gz&quot;</span><span class="p">),</span> <span class="n">brain_mask</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">segm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># compute volumes of the segmentation masks</span>
-<span class="n">volume_dict</span> <span class="o">=</span> <span class="n">compute_volume_segm</span><span class="p">(</span><span class="n">subc_segm</span><span class="p">,</span> <span class="n">subc_keys</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">volume_dict</span><span class="p">)</span>
-</pre></div>
-</div>
 </section>
 <section id="advanced-example">
 <h2>Advanced Example<a class="headerlink" href="#advanced-example" title="Link to this heading">#</a></h2>
@@ -316,68 +283,6 @@ and segment a fetal brain scan.</p>
 use the individual pipeline functions rather than the wrapper functions. This ensures that
 the models are not reloaded for each scan. The following example demonstrates this for a single
 example.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.utils</span> <span class="kn">import</span> <span class="n">read_image</span><span class="p">,</span> <span class="n">write_image</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.alignment.align</span> <span class="kn">import</span> <span class="n">load_alignment_model</span><span class="p">,</span> <span class="n">align_to_atlas</span><span class="p">,</span> <span class="n">prepare_scan</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.structural_segmentation.subcortical_segm</span> <span class="kn">import</span> <span class="n">load_segmentation_model</span><span class="p">,</span> <span class="n">segment_subcortical</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.tedsnet_multi.teds_multi_segm</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">load_tedsmulti_model</span><span class="p">,</span>
-    <span class="n">segment_tedsall</span><span class="p">,</span>
-    <span class="n">load_sidedetector_model</span><span class="p">,</span>
-    <span class="n">detect_side</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.brain_extraction.extract</span> <span class="kn">import</span> <span class="n">extract_brain</span><span class="p">,</span> <span class="n">load_brainextraction_model</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.alignment.kelluwen_transforms</span> <span class="kn">import</span> <span class="n">apply_affine</span>
-<span class="kn">from</span> <span class="nn">fetalbrain.model_paths</span> <span class="kn">import</span> <span class="n">EXAMPLE_IMAGE_PATH</span>
-
-
-<span class="c1"># Load the models once</span>
-<span class="n">align_model</span> <span class="o">=</span> <span class="n">load_alignment_model</span><span class="p">()</span>
-<span class="n">subc_segmmodel</span> <span class="o">=</span> <span class="n">load_segmentation_model</span><span class="p">()</span>
-<span class="n">teds_multimodel</span> <span class="o">=</span> <span class="n">load_tedsmulti_model</span><span class="p">()</span>
-<span class="n">side_detectormodel</span> <span class="o">=</span> <span class="n">load_sidedetector_model</span><span class="p">()</span>
-<span class="n">brainextraction_model</span> <span class="o">=</span> <span class="n">load_brainextraction_model</span><span class="p">()</span>
-
-<span class="c1"># whether to do connected component analysis for subcortical segm</span>
-<span class="n">connected_component</span> <span class="o">=</span> <span class="kc">True</span>
-
-<span class="c1"># Loop over all scans (just one here as example)</span>
-<span class="n">example_scan</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">EXAMPLE_IMAGE_PATH</span><span class="p">)</span>
-<span class="n">torch_scan</span> <span class="o">=</span> <span class="n">prepare_scan</span><span class="p">(</span><span class="n">example_scan</span><span class="p">)</span>
-
-<span class="c1"># Start with alignment to atlas space</span>
-<span class="n">aligned_scan</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">align_to_atlas</span><span class="p">(</span><span class="n">torch_scan</span><span class="p">,</span> <span class="n">align_model</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-<span class="c1"># Perform subcortical segmentation</span>
-<span class="n">subc_segm</span><span class="p">,</span> <span class="n">subc_keys</span> <span class="o">=</span> <span class="n">segment_subcortical</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">,</span> <span class="n">subc_segmmodel</span><span class="p">,</span> <span class="n">connected_component</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># Perform segmentation with multi structure tedsnet</span>
-<span class="n">side</span><span class="p">,</span> <span class="n">prob_side</span> <span class="o">=</span> <span class="n">detect_side</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">,</span> <span class="n">side_detectormodel</span><span class="p">)</span>
-<span class="n">allstructure_segm</span><span class="p">,</span> <span class="n">multi_keys</span> <span class="o">=</span> <span class="n">segment_tedsall</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">,</span> <span class="n">teds_multimodel</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="n">side</span><span class="p">)</span>
-
-<span class="c1"># perform whole brian extraction (i.e. brain masking)</span>
-<span class="n">brain_mask</span><span class="p">,</span> <span class="n">brain_key</span> <span class="o">=</span> <span class="n">extract_brain</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">,</span> <span class="n">brainextraction_model</span><span class="p">)</span>
-
-<span class="c1"># Write out the results in the aligned orientation</span>
-<span class="n">savefolder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">)</span>
-<span class="n">savefolder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">write_image</span><span class="p">(</span><span class="n">savefolder</span> <span class="o">/</span> <span class="s2">&quot;aligned_scan.nii.gz&quot;</span><span class="p">,</span> <span class="n">aligned_scan</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
-<span class="n">write_image</span><span class="p">(</span><span class="n">savefolder</span> <span class="o">/</span> <span class="s2">&quot;subcortical_segm.nii.gz&quot;</span><span class="p">,</span> <span class="n">subc_segm</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">segm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">write_image</span><span class="p">(</span><span class="n">savefolder</span> <span class="o">/</span> <span class="s2">&quot;allstructure_segm.nii.gz&quot;</span><span class="p">,</span> <span class="n">allstructure_segm</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">segm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">write_image</span><span class="p">(</span><span class="n">savefolder</span> <span class="o">/</span> <span class="s2">&quot;brain_mask.nii.gz&quot;</span><span class="p">,</span> <span class="n">brain_mask</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">segm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-
-<span class="c1"># to create segmentations in the original orientation</span>
-<span class="n">aligned_scan</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">affine</span> <span class="o">=</span> <span class="n">align_to_atlas</span><span class="p">(</span><span class="n">torch_scan</span><span class="p">,</span> <span class="n">align_model</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_affine</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">subc_segm_original</span> <span class="o">=</span> <span class="n">apply_affine</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">subc_segm</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">affine</span><span class="o">.</span><span class="n">inverse</span><span class="p">(),</span> <span class="n">type_resampling</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">)</span>
-
-<span class="c1"># Write out the results in the original orientation</span>
-<span class="n">write_image</span><span class="p">(</span><span class="n">savefolder</span> <span class="o">/</span> <span class="s2">&quot;original_scan.nii.gz&quot;</span><span class="p">,</span> <span class="n">example_scan</span><span class="p">)</span>
-<span class="n">write_image</span><span class="p">(</span><span class="n">savefolder</span> <span class="o">/</span> <span class="s2">&quot;subcortical_segm_original.nii.gz&quot;</span><span class="p">,</span> <span class="n">subc_segm_original</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>  <span class="c1"># type: ignore</span>
-            <span class="n">segm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
 </section>
 </section>
 

@@ -239,16 +239,19 @@ the segmentation model, prepares the scan for segmentation and predicts the segm
 workflow. This can for example be used as follows:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">segm_model</span> <span class="o">=</span> <span class="n">load_segmentation_model</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan_prep</span> <span class="o">=</span> <span class="n">prepare_scan_segm</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan_prep</span> <span class="o">=</span> <span class="n">prepare_scan</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">segm_pred</span><span class="p">,</span> <span class="n">key_maps</span> <span class="o">=</span> <span class="n">segment_subcortical</span><span class="p">(</span><span class="n">aligned_scan_prep</span><span class="p">,</span> <span class="n">segm_model</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">segm_pred_cc</span> <span class="o">=</span> <span class="n">keep_largest_compoment</span><span class="p">(</span><span class="n">segm_pred</span><span class="o">.</span><span class="n">cpu</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">segm_pred_cc</span> <span class="o">=</span> <span class="n">keep_largest_compoment</span><span class="p">(</span><span class="n">segm_pred</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The <a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical" title="fetalbrain.structural_segmentation.subcortical_segm.segment_subcortical"><code class="xref py py-func docutils literal notranslate"><span class="pre">segment_subcortical()</span></code></a> function can also process batches of data (i.e. multiple scans at once),
 which can be useful to speed up analysis. More advanced examples can be found in the Example Gallery.</p>
 <p>Lastly, the <a class="reference internal" href="#fetalbrain.structural_segmentation.subcortical_segm.compute_volume_segm" title="fetalbrain.structural_segmentation.subcortical_segm.compute_volume_segm"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_volume_segm()</span></code></a> function can be used to compute the volume of each structure in the
-segmentation mask:
-[todo; fix this line] volume_dict = compute_volume_segm(segm_pred, key_maps, spacing=(0.6, 0.6, 0.6))</p>
+segmentation mask:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">key_maps</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ChP&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;LPVH&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;CSPV&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;CB&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">volume_dict</span> <span class="o">=</span> <span class="n">compute_volume_segm</span><span class="p">(</span><span class="n">segm_pred_cc</span><span class="p">,</span> <span class="n">key_maps</span><span class="p">,</span> <span class="n">spacing</span><span class="o">=</span><span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">))</span>
+</pre></div>
+</div>
 <section id="module-functions">
 <h2>Module functions<a class="headerlink" href="#module-functions" title="Link to this heading">#</a></h2>
 </section>
@@ -366,7 +369,7 @@ ventricle horn (LPVH), 3 = cavum septum pellucidum et vergae (CSPV), 4 = cerebel
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">((</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan_prep</span> <span class="o">=</span> <span class="n">prepare_scan_segm</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aligned_scan_prep</span> <span class="o">=</span> <span class="n">prepare_scan</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">segm_model</span> <span class="o">=</span> <span class="n">load_segmentation_model</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">segm_map</span><span class="p">,</span> <span class="n">key_maps</span> <span class="o">=</span> <span class="n">segment_subcortical</span><span class="p">(</span><span class="n">aligned_scan_prep</span><span class="p">,</span> <span class="n">segm_model</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">segm_map</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">)</span>

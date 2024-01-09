@@ -226,16 +226,17 @@
 <span class="sd">workflow. This can for example be used as follows:</span>
 <span class="sd">    &gt;&gt;&gt; segm_model = load_segmentation_model()</span>
 <span class="sd">    &gt;&gt;&gt; aligned_scan = torch.rand((160, 160, 160))</span>
-<span class="sd">    &gt;&gt;&gt; aligned_scan_prep = prepare_scan_segm(aligned_scan)</span>
+<span class="sd">    &gt;&gt;&gt; aligned_scan_prep = prepare_scan(aligned_scan)</span>
 <span class="sd">    &gt;&gt;&gt; segm_pred, key_maps = segment_subcortical(aligned_scan_prep, segm_model)</span>
-<span class="sd">    &gt;&gt;&gt; segm_pred_cc = keep_largest_compoment(segm_pred.cpu())</span>
+<span class="sd">    &gt;&gt;&gt; segm_pred_cc = keep_largest_compoment(segm_pred)</span>
 
 <span class="sd">The :func:`segment_subcortical` function can also process batches of data (i.e. multiple scans at once),</span>
 <span class="sd">which can be useful to speed up analysis. More advanced examples can be found in the Example Gallery.</span>
 
 <span class="sd">Lastly, the :func:`compute_volume_segm` function can be used to compute the volume of each structure in the</span>
 <span class="sd">segmentation mask:</span>
-<span class="sd">[todo; fix this line] volume_dict = compute_volume_segm(segm_pred, key_maps, spacing=(0.6, 0.6, 0.6))</span>
+<span class="sd">    &gt;&gt;&gt; key_maps = {&quot;ChP&quot;: 1, &quot;LPVH&quot;: 2, &quot;CSPV&quot;: 3, &quot;CB&quot;: 4}</span>
+<span class="sd">    &gt;&gt;&gt; volume_dict = compute_volume_segm(segm_pred_cc, key_maps, spacing=(0.6, 0.6, 0.6))</span>
 
 <span class="sd">Module functions</span>
 <span class="sd">----------------</span>
@@ -305,7 +306,7 @@
 <span class="sd">        key_maps: dictionary containing the mapping between the class values and the class names.</span>
 <span class="sd">    Example:</span>
 <span class="sd">        &gt;&gt;&gt; aligned_scan = torch.rand((160, 160, 160))</span>
-<span class="sd">        &gt;&gt;&gt; aligned_scan_prep = prepare_scan_segm(aligned_scan)</span>
+<span class="sd">        &gt;&gt;&gt; aligned_scan_prep = prepare_scan(aligned_scan)</span>
 <span class="sd">        &gt;&gt;&gt; segm_model = load_segmentation_model()</span>
 <span class="sd">        &gt;&gt;&gt; segm_map, key_maps = segment_subcortical(aligned_scan_prep, segm_model)</span>
 <span class="sd">        &gt;&gt;&gt; assert segm_map.shape == (1, 160, 160, 160)</span>

@@ -230,15 +230,15 @@ images when using the packages in this repository to ensure consistency. For exa
 in image differently, which can cause problems when using these together. The read/write functions in this module
 have all been adapated so that they are consistent with each other.</p>
 <dl>
-<dt>For reading .nii / .nii.gz / .mha use:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="p">,</span> <span class="n">spacing</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">)</span>
+<dt>For reading .nii / .nii.gz / .mha use:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="p">,</span> <span class="n">spacing</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">)</span>  
 </pre></div>
 </div>
 </dd>
-<dt>For reading matlab image files use:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="p">,</span> <span class="n">spacing</span> <span class="o">=</span> <span class="n">read_matlab_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">)</span>
+<dt>For reading matlab image files use:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="p">,</span> <span class="n">spacing</span> <span class="o">=</span> <span class="n">read_matlab_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">)</span>  
 </pre></div>
 </div>
 </dd>
-<dt>For writing .nii / .nii.gz / .mha use:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">write_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">spacing</span><span class="p">)</span>
+<dt>For writing .nii / .nii.gz / .mha use:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">write_image</span><span class="p">(</span><span class="n">vol_path</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">spacing</span><span class="p">)</span>  
 </pre></div>
 </div>
 </dd>
@@ -279,8 +279,8 @@ The negative spacing for the first two dimensions is to ensure consistency with 
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">example_scan</span><span class="p">,</span> <span class="n">spacing</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">TEST_IMAGE_PATH</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">plot_midplanes</span><span class="p">(</span><span class="n">example_scan</span><span class="p">,</span> <span class="s2">&quot;Original&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">test_image</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">plot_midplanes</span><span class="p">(</span><span class="n">test_image</span><span class="p">,</span> <span class="s2">&quot;Original&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -303,8 +303,9 @@ The negative spacing for the first two dimensions is to ensure consistency with 
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">example_scan</span><span class="p">,</span> <span class="n">spacing</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">TEST_IMAGE_PATH</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">plot_midplanes</span><span class="p">(</span><span class="n">example_scan</span><span class="p">,</span> <span class="s2">&quot;Original&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">test_image</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_segmentation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">160</span><span class="p">,</span><span class="mi">160</span><span class="p">,</span><span class="mi">160</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">plot_planes_segm</span><span class="p">(</span><span class="n">test_image</span><span class="p">,</span> <span class="n">test_segmentation</span><span class="p">,</span>  <span class="s2">&quot;segmentation&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -328,7 +329,7 @@ The negative spacing for the first two dimensions is to ensure consistency with 
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">example_scan</span><span class="p">,</span> <span class="n">spacing</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">TEST_IMAGE_PATH</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">example_scan</span><span class="p">,</span> <span class="n">spacing</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">IMAGE_PATH</span><span class="p">)</span>  
 </pre></div>
 </div>
 </dd></dl>
@@ -370,7 +371,8 @@ The images are written with integer pixel values between 0 and 255</p>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">test_image</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">,</span> <span class="mi">160</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">write_image</span><span class="p">(</span><span class="n">TEST_SAVEPATH_MHA</span><span class="p">,</span> <span class="n">test_image</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">savepath</span> <span class="o">=</span> <span class="s1">&#39;test.nii.gz&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">write_image</span><span class="p">(</span><span class="n">savepath</span><span class="p">,</span> <span class="n">test_image</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>

@@ -218,13 +218,13 @@
 <span class="sd">have all been adapated so that they are consistent with each other.</span>
 
 <span class="sd">For reading .nii / .nii.gz / .mha use:</span>
-<span class="sd">    &gt;&gt;&gt; image, spacing = read_image(vol_path)</span>
+<span class="sd">    &gt;&gt;&gt; image, spacing = read_image(vol_path)  # doctest: +SKIP</span>
 
 <span class="sd">For reading matlab image files use:</span>
-<span class="sd">    &gt;&gt;&gt; image, spacing = read_matlab_image(vol_path)</span>
+<span class="sd">    &gt;&gt;&gt; image, spacing = read_matlab_image(vol_path)  # doctest: +SKIP</span>
 
 <span class="sd">For writing .nii / .nii.gz / .mha use:</span>
-<span class="sd">    &gt;&gt;&gt; write_image(vol_path, image, spacing)</span>
+<span class="sd">    &gt;&gt;&gt; write_image(vol_path, image, spacing)  # doctest: +SKIP</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -236,9 +236,6 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 <span class="kn">from</span> <span class="nn">typeguard</span> <span class="kn">import</span> <span class="n">typechecked</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-
-<span class="n">TEST_IMAGE_PATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;test_data/09-8515_187days_1049.mha&quot;</span><span class="p">)</span>
-<span class="n">TEST_SAVEPATH_MHA</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;test_data/test.mha&quot;</span><span class="p">)</span>
 
 
 <span class="nd">@typechecked</span>
@@ -319,7 +316,7 @@
 <span class="sd">        spacing: spacing of the image</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; example_scan, spacing = read_image(TEST_IMAGE_PATH)</span>
+<span class="sd">        &gt;&gt;&gt; example_scan, spacing = read_image(IMAGE_PATH)  # doctest: +SKIP</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vol_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">vol_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">vol_path</span><span class="p">)</span>
@@ -409,7 +406,8 @@
 
 <span class="sd">    Example:</span>
 <span class="sd">        &gt;&gt;&gt; test_image =  np.random.rand(160, 160, 160)</span>
-<span class="sd">        &gt;&gt;&gt; write_image(TEST_SAVEPATH_MHA, test_image)</span>
+<span class="sd">        &gt;&gt;&gt; savepath = &#39;test.nii.gz&#39;</span>
+<span class="sd">        &gt;&gt;&gt; write_image(savepath, test_image) </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vol_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -469,8 +467,8 @@
 <span class="sd">        fig: reference to the plot</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; example_scan, spacing = read_image(TEST_IMAGE_PATH)</span>
-<span class="sd">        &gt;&gt;&gt; fig = plot_midplanes(example_scan, &quot;Original&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; test_image =  np.random.rand(160, 160, 160)</span>
+<span class="sd">        &gt;&gt;&gt; fig = plot_midplanes(test_image, &quot;Original&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;image must be 3D&quot;</span>
@@ -512,8 +510,9 @@
 <span class="sd">        fig: reference to the plot</span>
 
 <span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; example_scan, spacing = read_image(TEST_IMAGE_PATH)</span>
-<span class="sd">        &gt;&gt;&gt; fig = plot_midplanes(example_scan, &quot;Original&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; test_image =  np.random.rand(160, 160, 160)</span>
+<span class="sd">        &gt;&gt;&gt; test_segmentation = np.random.randint(0, 10, size = (160,160,160))</span>
+<span class="sd">        &gt;&gt;&gt; fig = plot_planes_segm(test_image, test_segmentation,  &quot;segmentation&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;image must be 3D&quot;</span>

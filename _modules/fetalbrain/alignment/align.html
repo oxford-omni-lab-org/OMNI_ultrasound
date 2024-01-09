@@ -274,11 +274,11 @@
 
 <span class="sd">    Example:</span>
 <span class="sd">        &gt;&gt;&gt; image = np.random.random_sample((1, 1, 160, 160, 160))</span>
-<span class="sd">        &gt;&gt;&gt; image = prepare_scan_segm(image)</span>
+<span class="sd">        &gt;&gt;&gt; image = prepare_scan(image)</span>
 <span class="sd">        &gt;&gt;&gt; assert torch.max(image) &gt; 1</span>
 
 <span class="sd">        &gt;&gt;&gt; image = torch.rand((1, 1, 160, 160, 160))</span>
-<span class="sd">        &gt;&gt;&gt; image = prepare_scan_segm(image)</span>
+<span class="sd">        &gt;&gt;&gt; image = prepare_scan(image)</span>
 <span class="sd">        &gt;&gt;&gt; assert torch.max(image) &gt; 1</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
