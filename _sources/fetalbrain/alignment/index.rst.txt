@@ -32,7 +32,7 @@ for package development or advanced use of the package.
 
 The above images can be created using the following code:
 
-.. literalinclude:: ../../../../src/fetalbrain/doc_scripts/align_demo.py
+.. literalinclude:: ../../../../doc_scripts/align_demo.py
   :language: python
 
 For more information on the use of the alignment functions see :doc:`/fetalbrain/alignment/align`.

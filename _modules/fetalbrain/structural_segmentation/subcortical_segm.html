@@ -216,14 +216,12 @@
 <span class="sd">As post-processing step, only the largest connected component of each class is kept by default. Doing</span>
 <span class="sd">this post-processing step can be disabled by setting the connected_component argument to False.</span>
 
-<span class="sd">A single scan can be segmented using the :func:`segment_scan_subc` function, which is a wrapper that loads</span>
-<span class="sd">the segmentation model, prepares the scan for segmentation and predicts the segmentation mask.</span>
+<span class="sd">A single scan can be segmented using the :func:`segment_scan_subc` function, which is a wrapper that loads the segmentation model, prepares the scan for segmentation and predicts the segmentation mask.</span>
 <span class="sd">    &gt;&gt;&gt; aligned_scan = torch.rand((160, 160, 160))</span>
 <span class="sd">    &gt;&gt;&gt; segm_pred_np, key_maps = segment_scan_subc(aligned_scan, connected_component=True)</span>
 
 <span class="sd">As for the alignment, it is recommended to use the functions :func:`load_segmentation_model`,</span>
-<span class="sd">:func:`prepare_scan_segm`, and :func:`segment_subcortical` directly to have more control over the</span>
-<span class="sd">workflow. This can for example be used as follows:</span>
+<span class="sd">:func:`prepare_scan_segm`, and :func:`segment_subcortical` directly to have more control over the workflow. This can for example be used as follows:</span>
 <span class="sd">    &gt;&gt;&gt; segm_model = load_segmentation_model()</span>
 <span class="sd">    &gt;&gt;&gt; aligned_scan = torch.rand((160, 160, 160))</span>
 <span class="sd">    &gt;&gt;&gt; aligned_scan_prep = prepare_scan(aligned_scan)</span>
@@ -233,8 +231,7 @@
 <span class="sd">The :func:`segment_subcortical` function can also process batches of data (i.e. multiple scans at once),</span>
 <span class="sd">which can be useful to speed up analysis. More advanced examples can be found in the Example Gallery.</span>
 
-<span class="sd">Lastly, the :func:`compute_volume_segm` function can be used to compute the volume of each structure in the</span>
-<span class="sd">segmentation mask:</span>
+<span class="sd">Lastly, the :func:`compute_volume_segm` function can be used to compute the volume of each structure in the segmentation mask:</span>
 <span class="sd">    &gt;&gt;&gt; key_maps = {&quot;ChP&quot;: 1, &quot;LPVH&quot;: 2, &quot;CSPV&quot;: 3, &quot;CB&quot;: 4}</span>
 <span class="sd">    &gt;&gt;&gt; volume_dict = compute_volume_segm(segm_pred_cc, key_maps, spacing=(0.6, 0.6, 0.6))</span>
 

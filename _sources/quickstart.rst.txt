@@ -40,7 +40,7 @@ Development installation
 
 To install the package for development, use::
 
-    $ pip install -e .[all]
+    $ pip install -e ".[all]"
 
 This will install the package as editable, meaning that any changes to the package
 are immediately available without having to reinstall the package. The [all] option
@@ -61,7 +61,7 @@ The following example shows a minimal example of using the whole pipeline to ali
 and segment a fetal brain scan. 
 
    
-.. literalinclude:: ../../src/fetalbrain/doc_scripts/quickstart.py
+.. literalinclude:: ../../doc_scripts/quickstart.py
 
 
 Advanced Example
@@ -72,7 +72,7 @@ use the individual pipeline functions rather than the wrapper functions. This en
 the models are not reloaded for each scan. The following example demonstrates this for a single
 example. 
 
-.. literalinclude:: ../../src/fetalbrain/doc_scripts/quickstart_multiple.py
+.. literalinclude:: ../../doc_scripts/quickstart_multiple.py
 
 
 
