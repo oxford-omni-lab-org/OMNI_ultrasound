@@ -16,8 +16,7 @@ docs/build/
 
 *.mha 
 
-# this is the teds prior shape
-!26wks_AllLabels.mha 
+
 
 
 *.png 
@@ -25,12 +24,17 @@ docs/build/
 *.nii 
 *.nii.gz 
 
+# this is the teds prior shape, we do want to track this
+!26wks_AllLabels.mha 
+
+# other exceptions to track
 !Tests/testdata/*.nii.gz
 !Tests/testdata/alignment/*.png
 !Tests/testdata/*.mha
 !Tests/testdata/subc_segmentation/*.nii.gz
 
 # model weights + config (might want to change this at some point to include them)
+src/model_weights
 *.json
 !config/*.json
 
