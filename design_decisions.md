@@ -27,7 +27,7 @@ things to consider:
 - whether to accept strings as input to read/write functions
 - how to test image similarity with different transforms
 - - minimize dependencies (try to limit to numpy, torch, sitk and nibabel)
-- if using symbols in docstring, use  to surround them (e.g. `*`), else this will lead to sphinx errors
+- if using symbols in docstring, use to surround them (e.g. `*`), else this will lead to sphinx errors
 
 # use editable mode to install package from root (US_analysis_package)
 
@@ -44,9 +44,4 @@ pip install light-the-torch && ltt install torch
 
 pip install -e .[dev,plot]
 
-# for large files install lfs (apple)
 
-https://git-lfs.com/
-
-brew install git-lfs
-git lfs install
