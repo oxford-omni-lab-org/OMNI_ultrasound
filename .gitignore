@@ -10,7 +10,7 @@ __pycache__/
 
 BEAN
 Original_Codes
-Old_Code
+results
 
 docs/build/
 
@@ -36,6 +36,7 @@ docs/build/
 # model weights + config (might want to change this at some point to include them)
 src/model_weights
 *.json
+!settings.json
 !config/*.json
 
 build
