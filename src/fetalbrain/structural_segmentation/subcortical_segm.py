@@ -13,16 +13,17 @@ As for the alignment, it is recommended to use the functions :func:`load_segment
 workflow. This can for example be used as follows:
     >>> segm_model = load_segmentation_model()
     >>> aligned_scan = torch.rand((160, 160, 160))
-    >>> aligned_scan_prep = prepare_scan_segm(aligned_scan)
+    >>> aligned_scan_prep = prepare_scan(aligned_scan)
     >>> segm_pred, key_maps = segment_subcortical(aligned_scan_prep, segm_model)
-    >>> segm_pred_cc = keep_largest_compoment(segm_pred.cpu())
+    >>> segm_pred_cc = keep_largest_compoment(segm_pred)
 
 The :func:`segment_subcortical` function can also process batches of data (i.e. multiple scans at once),
 which can be useful to speed up analysis. More advanced examples can be found in the Example Gallery.
 
 Lastly, the :func:`compute_volume_segm` function can be used to compute the volume of each structure in the
 segmentation mask:
-[todo; fix this line] volume_dict = compute_volume_segm(segm_pred, key_maps, spacing=(0.6, 0.6, 0.6))
+    >>> key_maps = {"ChP": 1, "LPVH": 2, "CSPV": 3, "CB": 4}
+    >>> volume_dict = compute_volume_segm(segm_pred_cc, key_maps, spacing=(0.6, 0.6, 0.6))
 
 Module functions
 ----------------
@@ -87,7 +88,7 @@ def segment_subcortical(
         key_maps: dictionary containing the mapping between the class values and the class names.
     Example:
         >>> aligned_scan = torch.rand((160, 160, 160))
-        >>> aligned_scan_prep = prepare_scan_segm(aligned_scan)
+        >>> aligned_scan_prep = prepare_scan(aligned_scan)
         >>> segm_model = load_segmentation_model()
         >>> segm_map, key_maps = segment_subcortical(aligned_scan_prep, segm_model)
         >>> assert segm_map.shape == (1, 160, 160, 160)

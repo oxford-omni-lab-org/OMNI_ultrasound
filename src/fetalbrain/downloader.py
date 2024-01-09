@@ -1,6 +1,6 @@
 """ This scripts donwloads the model weights into the correct folder. 
 After installation of the package it can be run using from command line with:
-    >>> ftlbr_download_modelweights
+    >>> ftlbr_download_modelweights   # doctest: +SKIP
 """
 from urllib.request import urlretrieve
 from fetalbrain.model_paths import MODEL_WEIGHTS_FOLDER
