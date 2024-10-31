@@ -177,5 +177,5 @@ def segment_scan_tedsall(aligned_scan: torch.Tensor) -> tuple[np.ndarray, dict]:
     side_model = load_sidedetector_model()
     side, _ = detect_side(aligned_scan, side_model)
 
-    multiclass, keys = segment_tedsall(aligned_scan, segm_model, side=side)
+    multiclass, keys,field = segment_tedsall(aligned_scan, segm_model, side=side)
     return multiclass.squeeze(), keys
