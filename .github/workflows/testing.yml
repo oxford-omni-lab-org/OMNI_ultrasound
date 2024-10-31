@@ -27,5 +27,5 @@ jobs:
           pip install .[all]
           export PYTHONPATH=$PYTHONPATH:${GITHUB_WORKSPACE}/src
           ftlbr_download_modelweights --force --testdata
-          pytest Tests
+          pytest --cov-report term-missing --cov=src --doctest-modules src/fetalbrain/ Tests/
 

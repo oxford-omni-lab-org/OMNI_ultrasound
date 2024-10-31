@@ -11,7 +11,7 @@ alignment transform to the segmentations. Examples on these workflows are provid
 
 An example subcortical segmentation can be produced with the following code:
 
-.. literalinclude:: ../../../../src/fetalbrain/doc_scripts/subc_demo.py
+.. literalinclude:: ../../../../doc_scripts/subc_demo.py
    :language: python
 
 Running this results in the following output figure (CB: pink, ChP: yellow, LPVH: green, CSPV: blue):

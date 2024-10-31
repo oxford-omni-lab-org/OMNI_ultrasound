@@ -5,13 +5,13 @@ in image differently, which can cause problems when using these together. The re
 have all been adapated so that they are consistent with each other.
 
 For reading .nii / .nii.gz / .mha use:
-    >>> image, spacing = read_image(vol_path)
+    >>> image, spacing = read_image(vol_path)  # doctest: +SKIP
 
 For reading matlab image files use:
-    >>> image, spacing = read_matlab_image(vol_path)
+    >>> image, spacing = read_matlab_image(vol_path)  # doctest: +SKIP
 
 For writing .nii / .nii.gz / .mha use:
-    >>> write_image(vol_path, image, spacing)
+    >>> write_image(vol_path, image, spacing)  # doctest: +SKIP
 """
 
 import numpy as np
@@ -23,9 +23,6 @@ import nibabel as nib
 from typing import Optional
 from typeguard import typechecked
 import matplotlib.pyplot as plt
-
-TEST_IMAGE_PATH = Path("test_data/09-8515_187days_1049.mha")
-TEST_SAVEPATH_MHA = Path("test_data/test.mha")
 
 
 @typechecked
@@ -104,7 +101,7 @@ def read_image(vol_path: Union[Path, str]) -> tuple[np.ndarray, tuple[float, flo
         spacing: spacing of the image
 
     Example:
-        >>> example_scan, spacing = read_image(TEST_IMAGE_PATH)
+        >>> example_scan, spacing = read_image(IMAGE_PATH)  # doctest: +SKIP
     """
     if isinstance(vol_path, str):
         vol_path = Path(vol_path)
@@ -185,7 +182,8 @@ def write_image(
 
     Example:
         >>> test_image =  np.random.rand(160, 160, 160)
-        >>> write_image(TEST_SAVEPATH_MHA, test_image)
+        >>> savepath = 'test.nii.gz'
+        >>> write_image(savepath, test_image) 
     """
 
     if isinstance(vol_path, str):
@@ -242,8 +240,8 @@ def plot_midplanes(image: np.ndarray, title: str) -> plt.Figure:
         fig: reference to the plot
 
     Example:
-        >>> example_scan, spacing = read_image(TEST_IMAGE_PATH)
-        >>> fig = plot_midplanes(example_scan, "Original")
+        >>> test_image =  np.random.rand(160, 160, 160)
+        >>> fig = plot_midplanes(test_image, "Original")
     """
 
     assert len(image.shape) == 3, "image must be 3D"
@@ -282,8 +280,9 @@ def plot_planes_segm(image: np.ndarray, segmentation: np.ndarray, title: Optiona
         fig: reference to the plot
 
     Example:
-        >>> example_scan, spacing = read_image(TEST_IMAGE_PATH)
-        >>> fig = plot_midplanes(example_scan, "Original")
+        >>> test_image =  np.random.rand(160, 160, 160)
+        >>> test_segmentation = np.random.randint(0, 10, size = (160,160,160))
+        >>> fig = plot_planes_segm(test_image, test_segmentation,  "segmentation")
     """
 
     assert len(image.shape) == 3, "image must be 3D"

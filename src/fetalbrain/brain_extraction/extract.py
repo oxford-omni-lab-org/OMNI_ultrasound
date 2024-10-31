@@ -40,15 +40,15 @@ def extract_brain(aligned_scan: torch.Tensor, segm_model: UNet) -> tuple[torch.T
     Args:
         aligned_scan: torch tensor containing the aligned image(s) to segment. Should be of size [B, 1, H, W, D].
             Expected input orientation is equal to the output of the align_to_atlas(scale = False) function.
-        segm_model: a loaded segmentation model, can be obtained using the load_segmentation_model() function.
+        segm_model: a loaded segmentation model for whole brain extraction, can be obtained using the load_brainextraction_model() function.
 
     Returns:
         brain_mask: brain mask of the aligned scan of size [B, 1, H, W, D].
 
     Example:
-        >>> scan = torch.rand((160, 160, 160))
-        >>> segm_model = load_segmentation_model()
-        >>> brain_mask = extract_brain(aligned_scan, segm_model)
+        >>> scan = torch.rand((1, 1, 160, 160, 160))
+        >>> brain_extraction_model = load_brainextraction_model()
+        >>> brain_mask = extract_brain(scan, brain_extraction_model)
     """
     segm_model.to(aligned_scan.device)
     brain_mask = segm_model(aligned_scan)
@@ -62,14 +62,13 @@ def extract_scan_brain(scan: torch.Tensor) -> tuple[np.ndarray, dict[str, int]]:
     """Generate brain mask for a given scan using the default brain extraction model weights
 
     Args:
-        scan: torch tensor containing the image(s) to segment. Should be of size [B, 1, H, W, D] with
-        pixel values between 0 and 255
+        scan: torch tensor containing the image(s) to segment. Should be of size [B, 1, H, W, D] with pixel values between 0 and 255
 
     Returns:
         brain_mask: brain mask of the scan of size [B, 1, H, W, D].
 
     Example:
-        >>> scan = torch.rand((160, 160, 160))
+        >>> scan = torch.rand((1,1, 160, 160, 160))
         >>> brain_mask = extract_scan_brain(scan)
     """
     extraction_model = load_brainextraction_model()

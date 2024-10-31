@@ -56,11 +56,11 @@ def prepare_scan(image: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
 
     Example:
         >>> image = np.random.random_sample((1, 1, 160, 160, 160))
-        >>> image = prepare_scan_segm(image)
+        >>> image = prepare_scan(image)
         >>> assert torch.max(image) > 1
 
         >>> image = torch.rand((1, 1, 160, 160, 160))
-        >>> image = prepare_scan_segm(image)
+        >>> image = prepare_scan(image)
         >>> assert torch.max(image) > 1
     """
 

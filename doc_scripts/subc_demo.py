@@ -1,11 +1,10 @@
-from pathlib import Path
 from fetalbrain.structural_segmentation.subcortical_segm import segment_scan_subc
 from fetalbrain.utils import read_image, plot_planes_segm
 from fetalbrain.alignment.align import align_scan
+from fetalbrain.model_paths import EXAMPLE_IMAGE_PATH
 
 # load an image
-TEST_IMAGE_PATH = Path("src/fetalbrain/alignment/test_data/06-5010_152days_0356.mha")
-example_scan, _ = read_image(TEST_IMAGE_PATH)
+example_scan, _ = read_image(EXAMPLE_IMAGE_PATH)
 
 # align the scan to the atlas space without scaling
 aligned_scan, params = align_scan(example_scan, scale=False)
