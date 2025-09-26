@@ -1,9 +1,10 @@
-This repository is currently still work in progress. Documentation can be found on: https://oxford-omni-lab-org.github.io/OMNI_ultrasound/
+This repository is still actively updated
+Any feedback on usability/documentation etc., is also very welcome! 
+
+Documentation can be found on: https://oxford-omni-lab-org.github.io/OMNI_ultrasound/
 
 
-Keep in mind that no one has yet used the repo except for me, so make sure to properly inspect your results so we can find any bugs and correct them. Any feedback on usability/documentation etc., is also very welcome! 
-
-[TO-DO]
+[Future Plans]
 - Documentation
     - Include documentation for TEDS-Net
     - Ensure all docstrings are accurate (i.e. default settings etc.)
