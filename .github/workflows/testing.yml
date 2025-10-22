@@ -26,7 +26,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: 3.11
-          
+
+      - name: Check model weights
+        run: ls -lh ${GITHUB_WORKSPACE}/path/to/weights
+
       - name: Install and Test
         run: |
           pip install .[all]
