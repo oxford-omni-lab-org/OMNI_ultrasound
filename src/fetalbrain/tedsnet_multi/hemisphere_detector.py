@@ -14,9 +14,6 @@ def load_sidedetector_model(model_path: Optional[Path] = None) -> torch.nn.Modul
 
     Returns:
         model: ResNet model with trained weights loaded
-
-    Example:
-        >>> model = load_sidedetector_model()
     """
     if model_path is None:
         model_path = SIDE_DETECTOR_MODEL_PATH
