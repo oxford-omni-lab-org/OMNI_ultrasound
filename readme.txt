@@ -5,7 +5,7 @@ Documentation can be found on: https://oxford-omni-lab-org.github.io/OMNI_ultras
 
 NB: this packages required Python 3.11. This can be achieved by creating a conda environement: e.g: conda create -n fetalbrain-env python=3.11
 
-NB: All volumes must be resampled to 0.6mm3 before applying this pipeline
+NB: All volumes must be resampled to 0.6mm3 before applying this pipeline.
 
 
 [Future Plans]
