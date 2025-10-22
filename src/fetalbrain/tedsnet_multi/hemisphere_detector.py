@@ -1,4 +1,5 @@
 import torch
+import torchvision
 from pathlib import Path
 from typing import Optional, Literal
 import numpy as np
@@ -20,7 +21,7 @@ def load_sidedetector_model(model_path: Optional[Path] = None) -> torch.nn.Modul
     if model_path is None:
         model_path = SIDE_DETECTOR_MODEL_PATH
 
-    model = torch.hub.load("pytorch/vision:v0.10.0", "resnet18", pretrained=False, num_classes=2)
+    model = torch.hub.load("pytorch/vision", "resnet18", weights=None, num_classes=2)
     model_weights = torch.load(model_path, map_location=torch.device("cpu"))
     
     model.load_state_dict(model_weights)
