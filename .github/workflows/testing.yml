@@ -33,3 +33,6 @@ jobs:
           export PYTHONPATH=$PYTHONPATH:${GITHUB_WORKSPACE}/src
           ftlbr_download_modelweights --force --testdata
           pytest --cov-report term-missing --cov=src --doctest-modules src/fetalbrain/ Tests/
+          
+      - name: Check model weights
+        run: ls -lh ${GITHUB_WORKSPACE}/path/to/weights
