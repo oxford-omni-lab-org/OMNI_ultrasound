@@ -27,9 +27,6 @@ jobs:
         with:
           python-version: 3.11
 
-      - name: Check model weights
-        run: ls -lh ${GITHUB_WORKSPACE}/path/to/weights
-
       - name: Install and Test
         run: |
           pip install .[all]
@@ -37,3 +34,5 @@ jobs:
           ftlbr_download_modelweights --force --testdata
           pytest --cov-report term-missing --cov=src --doctest-modules src/fetalbrain/ Tests/
 
+      - name: Check model weights
+        run: ls -lh ${GITHUB_WORKSPACE}/path/to/weights
