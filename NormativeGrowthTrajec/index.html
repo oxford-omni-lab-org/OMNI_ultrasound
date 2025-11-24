@@ -268,11 +268,9 @@
 <h1>Normative Growth Trajectories<a class="headerlink" href="#normative-growth-trajectories" title="Link to this heading">¶</a></h1>
 <section id="intro">
 <h2>Intro<a class="headerlink" href="#intro" title="Link to this heading">¶</a></h2>
-<p>Here we provide guidance on how to use this repo to generate the results seen in:<strong>Normative growth trajectories of fetal brain regions validated by satisfactory maturation of neurodevelopmental domains at 2 years of age</strong></p>
-<blockquote>
-<div><a class="reference internal image-reference" href="../example_images/pipeline.png"><img alt="overview of the pipeline" src="../example_images/pipeline.png" style="width: 500px;" />
+<p>Here we provide guidance on how to use this repo to generate the results seen in: <strong>Normative growth trajectories of fetal brain regions validated by satisfactory maturation of neurodevelopmental domains at 2 years of age</strong></p>
+<a class="reference internal image-reference" href="../_images/pipeline.png"><img alt="overview of the pipeline" src="../_images/pipeline.png" style="width: 500px;" />
 </a>
-</div></blockquote>
 <section id="installation">
 <h3>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h3>
 <p>Install the code following steps in <strong>Getting started</strong></p>
@@ -283,8 +281,7 @@
 <p>To follow example computes the pipeline used in Normative Growth Trajectories manuscript.</p>
 <p>This pipeline will save out, an aligned scan <strong>aligned_scan.nii.gz</strong>, a brain mask used to compute TBV <strong>brain_mask.nii.gz</strong> and the 15 region segmentation <strong>allstructure_segm.nii.gz</strong>.
 Segmentation index:</p>
-<dl>
-<dt>{</dt><dd><blockquote>
+<blockquote>
 <div><p>“CoP”: 1,
 “CSP”: 2,
 “CB”: 3,
@@ -296,22 +293,213 @@ Segmentation index:</p>
 “WM”: 9,
 “FH”: 10,</p>
 </div></blockquote>
-<p>}</p>
-</dd>
-</dl>
 <p>To run the pipeline for multiple scans and with more flexibility, it is recommended to
 use the individual pipeline functions rather than the wrapper functions. This ensures that
 the models are not reloaded for each scan. The following example demonstrates this for a single
 example.</p>
 <p>To ammend for your data: change: $EXAMPLE_IMAGE_PATH and $savefolder</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fetalbrain.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_image</span><span class="p">,</span> <span class="n">write_image</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fetalbrain.alignment.align</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_alignment_model</span><span class="p">,</span> <span class="n">align_to_atlas</span><span class="p">,</span> <span class="n">prepare_scan</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fetalbrain.structural_segmentation.subcortical_segm</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_segmentation_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fetalbrain.tedsnet_multi.teds_multi_segm</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">load_tedsmulti_model</span><span class="p">,</span>
+    <span class="n">segment_tedsall</span><span class="p">,</span>
+    <span class="n">load_sidedetector_model</span><span class="p">,</span>
+    <span class="n">detect_side</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fetalbrain.brain_extraction.extract</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_brain</span><span class="p">,</span> <span class="n">load_brainextraction_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fetalbrain.model_paths</span><span class="w"> </span><span class="kn">import</span> <span class="n">EXAMPLE_IMAGE_PATH</span>
+
+
+<span class="c1"># Load the models once</span>
+<span class="n">align_model</span> <span class="o">=</span> <span class="n">load_alignment_model</span><span class="p">()</span>
+<span class="n">teds_multimodel</span> <span class="o">=</span> <span class="n">load_tedsmulti_model</span><span class="p">()</span>
+<span class="n">side_detectormodel</span> <span class="o">=</span> <span class="n">load_sidedetector_model</span><span class="p">()</span>
+<span class="n">brainextraction_model</span> <span class="o">=</span> <span class="n">load_brainextraction_model</span><span class="p">()</span>
+
+<span class="c1"># whether to do connected component analysis for subcortical segm</span>
+<span class="n">connected_component</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="c1"># Loop over all scans (just one here as example)</span>
+<span class="n">example_scan</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">EXAMPLE_IMAGE_PATH</span><span class="p">)</span> 
+<span class="n">torch_scan</span> <span class="o">=</span> <span class="n">prepare_scan</span><span class="p">(</span><span class="n">example_scan</span><span class="p">)</span>
+
+<span class="c1"># Start with alignment to atlas space</span>
+<span class="n">aligned_scan</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">align_to_atlas</span><span class="p">(</span><span class="n">torch_scan</span><span class="p">,</span> <span class="n">align_model</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Perform segmentation with multi structure tedsnet</span>
+<span class="n">side</span><span class="p">,</span> <span class="n">prob_side</span> <span class="o">=</span> <span class="n">detect_side</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">,</span> <span class="n">side_detectormodel</span><span class="p">)</span>
+<span class="n">allstructure_segm</span><span class="p">,</span> <span class="n">multi_keys</span> <span class="o">=</span> <span class="n">segment_tedsall</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">,</span> <span class="n">teds_multimodel</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="n">side</span><span class="p">)</span>
+
+<span class="c1"># perform whole brian extraction (i.e. brain masking)</span>
+<span class="n">brain_mask</span><span class="p">,</span> <span class="n">brain_key</span> <span class="o">=</span> <span class="n">extract_brain</span><span class="p">(</span><span class="n">aligned_scan</span><span class="p">,</span> <span class="n">brainextraction_model</span><span class="p">)</span>
+
+<span class="c1"># Write out the results in the aligned orientation</span>
+<span class="n">savefolder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">savefolder</span><span class="p">)</span>
+<span class="n">savefolder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">write_image</span><span class="p">(</span><span class="n">savefolder</span> <span class="o">/</span> <span class="s2">&quot;aligned_scan.nii.gz&quot;</span><span class="p">,</span> <span class="n">aligned_scan</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+<span class="n">write_image</span><span class="p">(</span><span class="n">savefolder</span> <span class="o">/</span> <span class="s2">&quot;allstructure_segm.nii.gz&quot;</span><span class="p">,</span> <span class="n">allstructure_segm</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(),</span> <span class="n">segm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">write_image</span><span class="p">(</span><span class="n">savefolder</span> <span class="o">/</span> <span class="s2">&quot;brain_mask.nii.gz&quot;</span><span class="p">,</span> <span class="n">brain_mask</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">segm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+</pre></div>
+</div>
 </section>
 <section id="compute-volume">
 <h2>Compute Volume<a class="headerlink" href="#compute-volume" title="Link to this heading">¶</a></h2>
 <p>To compute the volume of each segmented structure, this minimal example can be used.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fetalbrain.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_image</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">ComputeVol</span><span class="p">(</span><span class="n">allstructure_segm</span><span class="p">,</span> <span class="n">brain_mask</span><span class="p">,</span><span class="n">voxel_dim</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span><span class="n">N</span><span class="o">=</span><span class="mi">160</span><span class="p">):</span>
+ 
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">allstructure_segm</span><span class="p">)</span> <span class="o">==</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">)))</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">brain_mask</span><span class="p">)</span> <span class="o">==</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">)))</span>
+
+    <span class="n">struc_vol_dict</span> <span class="o">=</span> <span class="p">{}</span> 
+
+    <span class="c1"># compute the TBV:</span>
+    <span class="n">volume</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">brain_mask</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">voxel_dim</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">struc_vol_dict</span><span class="p">[</span><span class="s2">&quot;TBV&quot;</span><span class="p">]</span> <span class="o">=</span><span class="n">volume</span>
+
+    <span class="c1"># Index of each of the structures</span>
+    <span class="n">key_maps</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;CoP&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;CSP&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;CB&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">&quot;ChP&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="s2">&quot;LV&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="s2">&quot;DGM&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="s2">&quot;Th&quot;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+        <span class="s2">&quot;BS&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="s2">&quot;WM&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+        <span class="s2">&quot;FH&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+    <span class="k">for</span> <span class="n">keys</span> <span class="ow">in</span> <span class="n">key_maps</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Loop through the structures and measure volume</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">struc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">allstructure_segm</span><span class="o">==</span><span class="n">key_maps</span><span class="p">[</span><span class="n">keys</span><span class="p">],</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">volume</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">struc</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">voxel_dim</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">struc_vol_dict</span><span class="p">[</span><span class="n">keys</span><span class="o">+</span><span class="s2">&quot;V&quot;</span><span class="p">]</span> <span class="o">=</span><span class="n">volume</span>
+        
+    <span class="nb">print</span><span class="p">(</span><span class="n">struc_vol_dict</span><span class="p">)</span>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the volume measures of the segmented structures</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">savefolder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;results&quot;</span><span class="p">)</span>
+    <span class="n">allstructure_segm</span><span class="p">,</span><span class="n">h</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">savefolder</span> <span class="o">/</span> <span class="s2">&quot;allstructure_segm.nii.gz&quot;</span><span class="p">)</span>
+    <span class="n">brain_mask</span><span class="p">,</span><span class="n">h</span> <span class="o">=</span> <span class="n">read_image</span><span class="p">(</span><span class="n">savefolder</span> <span class="o">/</span> <span class="s2">&quot;brain_mask.nii.gz&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Measure the volume of each structire:</span>
+    <span class="n">SVol</span> <span class="o">=</span> <span class="n">ComputeVol</span><span class="p">(</span><span class="n">allstructure_segm</span><span class="p">,</span> <span class="n">brain_mask</span><span class="p">)</span>
+
+</pre></div>
+</div>
 </section>
 <section id="compare-volume">
 <h2>Compare Volume<a class="headerlink" href="#compare-volume" title="Link to this heading">¶</a></h2>
 <p>The following example shows how to compare your volume measure to the normative growth equations (Suppl Table 8)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NormGrowthEQ</span><span class="p">:</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Normative Growth Trajectories for volume in cm3</span>
+
+
+<span class="sd">        Input:  GA - the gestational age of the subject (in weeks) </span>
+<span class="sd">            </span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">TBV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">GA</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="mf">1.954510</span> <span class="o">+</span> <span class="mf">0.018205</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="o">-</span><span class="mf">0.178633</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.702623</span> <span class="o">+</span> <span class="mf">0.150265</span><span class="o">*</span><span class="n">GA</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span><span class="n">o</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">CoPV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">GA</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="mf">213.602100</span> <span class="o">+</span> <span class="o">-</span><span class="mf">1055185.000000</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">3</span> <span class="o">+</span> <span class="mf">179286.700000</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">2</span> <span class="o">+</span> <span class="o">-</span><span class="mf">10465.890000</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">1</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">3.319410</span> <span class="o">+</span> <span class="mf">0.276768</span><span class="o">*</span><span class="n">GA</span> <span class="o">+</span> <span class="o">-</span><span class="mf">0.004899</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span><span class="n">o</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">WMV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">GA</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="mf">147.933791</span> <span class="o">+</span> <span class="o">-</span><span class="mf">20.171007</span><span class="o">*</span><span class="n">GA</span> <span class="o">+</span> <span class="mf">0.862044</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="o">-</span><span class="mf">0.010213</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">8.181534</span> <span class="o">+</span> <span class="o">-</span><span class="mf">34.670966</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span><span class="n">o</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">DGMV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">GA</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="mf">2.565062</span> <span class="o">+</span> <span class="o">-</span><span class="mf">0.905458</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">+</span> <span class="mf">0.000642</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">3.357278</span> <span class="o">+</span> <span class="mf">0.134731</span><span class="o">*</span><span class="n">GA</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span><span class="n">o</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">CBV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">GA</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="mf">20.062157</span> <span class="o">+</span> <span class="o">-</span><span class="mf">26.210291</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">GA</span><span class="p">)</span> <span class="o">+</span> <span class="mf">13.249654</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">4.802530</span> <span class="o">+</span> <span class="mf">0.144062</span><span class="o">*</span><span class="n">GA</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span><span class="n">o</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">ChPV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">GA</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="o">-</span><span class="mf">8.747354</span> <span class="o">+</span> <span class="mf">1.226594</span><span class="o">*</span><span class="n">GA</span> <span class="o">+</span> <span class="o">-</span><span class="mf">0.052478</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.000745</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">4.017505</span> <span class="o">+</span> <span class="o">-</span><span class="mf">1353.340000</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">110.794500</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span><span class="n">o</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">LVV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">GA</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="mf">0.199152</span> <span class="o">+</span> <span class="o">-</span><span class="mf">759.201300</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">3</span> <span class="o">+</span> <span class="mf">0.000006</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">8.870769</span> <span class="o">+</span> <span class="mf">1.868799</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">GA</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span><span class="n">o</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">FHV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">GA</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="mf">1.957187</span> <span class="o">+</span> <span class="o">-</span><span class="mf">0.247137</span><span class="o">*</span><span class="n">GA</span> <span class="o">+</span> <span class="mf">0.010655</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="o">-</span><span class="mf">0.000135</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">28.094510</span> <span class="o">+</span> <span class="mf">1841.363000</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">334027.300000</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">3</span> <span class="o">+</span> <span class="o">-</span><span class="mf">43795.430000</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span><span class="n">o</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">BSV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">GA</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="mf">27.563862</span> <span class="o">+</span> <span class="o">-</span><span class="mf">187.829409</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mf">0.5</span> <span class="o">+</span> <span class="mf">9843.864509</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">2</span> <span class="o">+</span> <span class="o">-</span><span class="mf">77842.728897</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">3</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">41.292163</span> <span class="o">+</span> <span class="o">-</span><span class="mf">7.207325</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">GA</span><span class="p">)</span> <span class="o">+</span> <span class="o">-</span><span class="mf">745.053409</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">5815.331813</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span><span class="n">o</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">ThV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">GA</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.006779</span> <span class="o">+</span> <span class="mf">0.000063</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">2.222630</span> <span class="o">+</span> <span class="o">-</span><span class="mf">21.555120</span><span class="o">*</span><span class="n">GA</span><span class="o">**-</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span><span class="n">o</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">CSPV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">GA</span><span class="p">):</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="mf">4.356401</span> <span class="o">+</span> <span class="o">-</span><span class="mf">0.607443</span><span class="o">*</span><span class="n">GA</span> <span class="o">+</span> <span class="mf">0.026988</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="o">-</span><span class="mf">0.000357</span><span class="o">*</span><span class="n">GA</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">7.132420</span> <span class="o">+</span> <span class="mf">0.186246</span><span class="o">*</span><span class="n">GA</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span><span class="n">o</span>
+   
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+
+    <span class="c1"># Set up the class containing all equations</span>
+    <span class="n">EQ</span> <span class="o">=</span> <span class="n">NormGrowthEQ</span><span class="p">()</span>
+
+    <span class="c1"># Individual </span>
+    <span class="n">CoP_volume</span> <span class="o">=</span> <span class="mi">7</span> <span class="c1">#cm3</span>
+    <span class="n">age</span> <span class="o">=</span> <span class="mf">20.2</span> <span class="c1">#gestational weeks</span>
+
+    <span class="c1"># Compute z-score</span>
+    <span class="n">u</span><span class="p">,</span><span class="n">o</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">EQ</span><span class="p">,</span><span class="s2">&quot;CoPV&quot;</span><span class="p">)(</span><span class="n">age</span><span class="p">)</span> <span class="c1"># find normative mean + std</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="n">CoP_volume</span> <span class="o">-</span> <span class="n">u</span><span class="p">)</span><span class="o">/</span><span class="n">o</span> 
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;z-score for individual: &quot;</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 </section>
 
