@@ -1,7 +1,7 @@
 Normative Growth Trajectories
 ===============
 
-Intro
+Introduction
 ------------
 
 Here we provide guidance on how to use this repo to generate the results seen in: **Normative growth trajectories of fetal brain regions validated by satisfactory maturation of neurodevelopmental domains at 2 years of age**
@@ -12,13 +12,13 @@ Here we provide guidance on how to use this repo to generate the results seen in
 
 
 Installation
-^^^^^^^^^^^^^^^^^
+------------
 Install the code following steps in **Getting started**
 
 
 Pipeline Example
 ----------------
-To follow example computes the pipeline used in Normative Growth Trajectories manuscript.
+The following example implements the pipeline used in Normative Growth Trajectories manuscript.
 
 This pipeline will save out, an aligned scan **aligned_scan.nii.gz**, a brain mask used to compute TBV **brain_mask.nii.gz** and the 15 region segmentation **allstructure_segm.nii.gz**.
 Segmentation index:
@@ -47,7 +47,7 @@ To ammend for your data: change: $EXAMPLE_IMAGE_PATH and $savefolder
 
 Compute Volume
 ---------------
-To compute the volume of each segmented structure, this minimal example can be used.
+To compute the volume of each segmented structure, this minimal example can be used:
 
 .. literalinclude:: ../../../doc_scripts/compute_vol.py
 
