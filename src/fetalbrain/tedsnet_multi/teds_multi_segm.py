@@ -9,7 +9,7 @@ from fetalbrain.tedsnet_multi.network.TEDS_Net import TEDS_Net
 from fetalbrain.alignment.align import prepare_scan
 from fetalbrain.utils import read_image
 from fetalbrain.tedsnet_multi.hemisphere_detector import load_sidedetector_model, detect_side
-from ..model_paths import TEDS_MULTI_MODEL_PATH, PRIOR_SHAPE_PATH
+from ..model_paths import TEDS_MULTI_MODEL_PATH, PRIOR_SHAPE_PATH,PRIOR_PARC_PATH
 
 
 def load_tedsmulti_model(model_path: Optional[Path] = None) -> TEDS_Net:
@@ -42,11 +42,12 @@ def load_tedsmulti_model(model_path: Optional[Path] = None) -> TEDS_Net:
     return model
 
 
-def get_prior_shape_sa(sd: Literal[0, 1]) -> torch.Tensor:
+def get_prior_shape_sa(sd: Literal[0, 1],prior="struc") -> torch.Tensor:
     """Get the prior paired with each week and side
 
     Args:
         sd: which side to get the prior shape for, either 0 or 1
+        prior: which prior shape we are deforming, default "struc"
 
     Returns:
         prior_shape: tensor containing the prior shape
@@ -54,27 +55,33 @@ def get_prior_shape_sa(sd: Literal[0, 1]) -> torch.Tensor:
     Example:
         >>> prior_shape = get_prior_shape_sa(0)
 
+        
+    Note: Added prior keyword to allow us to perform parcellation too!
     """
 
     assert sd in [0, 1], "sd should be either 0 or 1"
 
-    # Load in shape prior
-    pshape, _ = read_image(PRIOR_SHAPE_PATH)
+    if prior=="struc":
+        # Load in shape prior
+        pshape, _ = read_image(PRIOR_SHAPE_PATH)
+        nclass =10
+    else:
+        pshape, _ = read_image(PRIOR_PARC_PATH)
+        nclass=5
 
     # correct for permuted orientation
     pshape_per = np.swapaxes(pshape, 0, 2).astype(int)
 
-    # set the invisible hemisphere to zero, except for the cavum (because it is around the midplane)
-    cavum = np.where(pshape_per == 2, 1, 0)
-    if sd == 0:
-        pshape_per[:, 80:160, :] = 0
-    elif sd == 1:
-        pshape_per[:, 0:80, :] = 0
-
-    pshape_per = np.where(cavum == 1, 2, pshape_per)
+    if prior=="struc":
+        # set the invisible hemisphere to zero, except for the cavum (because it is around the midplane)
+        cavum = np.where(pshape_per == 2, 1, 0)
+        if sd == 0:
+            pshape_per[:, 80:160, :] = 0
+        elif sd == 1:
+            pshape_per[:, 0:80, :] = 0
+        pshape_per = np.where(cavum == 1, 2, pshape_per)
 
     # One hot the labels
-    nclass = 10
     one_hot = np.zeros((nclass, pshape_per.shape[0], pshape_per.shape[1], pshape_per.shape[2]))
     for i in range(1, nclass + 1):
         one_hot[i - 1, :, :, :][pshape_per == i] = 1
@@ -106,7 +113,7 @@ def generate_multiclass_prediction(prediction: torch.Tensor) -> np.ndarray:
 
 
 def segment_tedsall(
-    aligned_scan: torch.Tensor, segm_model: TEDS_Net, side: Literal[0, 1] = 0
+    aligned_scan: torch.Tensor, segm_model: TEDS_Net, side: Literal[0, 1] = 0,prior="struc"
 ) -> tuple[np.ndarray, dict]:
     """_summary_
 
@@ -121,29 +128,36 @@ def segment_tedsall(
     aligned_scan_per = aligned_scan.permute(0, 1, 4, 3, 2)
 
     # get the prior shape
-    prior = torch.unsqueeze(get_prior_shape_sa(side), 0).to(aligned_scan_per.device)
+    prior = torch.unsqueeze(get_prior_shape_sa(side,prior), 0).to(aligned_scan_per.device)
 
     # forward pass
-    logits, _ = segm_model(aligned_scan_per, prior)
+    logits, field = segm_model(aligned_scan_per, prior)
 
     # convert to multiclass [B, H, W, D]
     multiclass = generate_multiclass_prediction(logits.permute(0, 1, 4, 3, 2))
 
     # define key maps of model output
-    key_maps = {
-        "Cortical Plate": 1,
-        "Cavum Septum": 2,
-        "Cerebellum": 3,
-        "Choriod Plex": 4,
-        "Ventricle": 5,
-        "DGM": 6,
-        "Thalamus": 7,
-        "Brainstem": 8,
-        "WM": 9,
-        "Frontal Horns": 10,
-    }
+    if prior =="struc":
+        key_maps = {
+            "CoP": 1,
+            "CSP": 2,
+            "CB": 3,
+            "ChP": 4,
+            "LV": 5,
+            "DGM": 6,
+            "Th": 7,
+            "BS": 8,
+            "WM": 9,
+            "FH": 10,
+        }
+    else:
+        key_maps={"FL":1,
+                  "PL":2,
+                  "TL":3,
+                  "OL":4,
+                  "IL":5}
 
-    return multiclass, key_maps
+    return multiclass, key_maps,field
 
 
 def segment_scan_tedsall(aligned_scan: torch.Tensor) -> tuple[np.ndarray, dict]:
@@ -163,5 +177,5 @@ def segment_scan_tedsall(aligned_scan: torch.Tensor) -> tuple[np.ndarray, dict]:
     side_model = load_sidedetector_model()
     side, _ = detect_side(aligned_scan, side_model)
 
-    multiclass, keys = segment_tedsall(aligned_scan, segm_model, side=side)
+    multiclass, keys,field = segment_tedsall(aligned_scan, segm_model, side=side)
     return multiclass.squeeze(), keys
